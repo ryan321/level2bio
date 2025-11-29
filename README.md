@@ -1,205 +1,74 @@
-# Spec-First Development Kit for Claude Code
+# Level2.bio
 
-A complete workflow for spec-first development where specifications are the source of truth and code is generated from them.
+> Your resume's second layer — a private space to explain your work in depth and share it only when you choose.
 
-## Philosophy
+## What is Level2.bio?
 
-1. **Spec before code**: Define what you're building before you build it
-2. **Documentation is primary**: Code is derived from specs, not vice versa
-3. **Verify continuously**: AI agents check alignment, security, performance, and quality
-4. **Small iterations**: Build incrementally, commit often, review always
+Level2.bio gives job seekers a private, structured way to tell the real story behind their work. Candidates create "work stories" that explain the *why* and *how* behind their experience, then share them via a single private link they control.
 
-## Quick Start
+**For candidates**: Go deeper than bullet points. Explain your thinking, show your communication skills, and share things you couldn't put on LinkedIn — all privately.
 
-### Starting a New Project
+**For hiring managers**: Get the context you wish you had before scheduling interviews. Understand a candidate's reasoning and impact in minutes, not hours.
+
+## The Problem
+
+Modern hiring is broken by shallow signals:
+
+- Resumes reduce complex work to one-line bullets
+- Recruiters screen in 7-10 seconds
+- Great candidates look average on paper
+- LinkedIn is too public and performative
+- Portfolios take too much effort to build
+- Loom videos feel awkward and unguided
+
+## The Solution
+
+Level2.bio is the missing layer between a resume and an interview:
+
+- **Work stories, not bullet points** — Guided templates help you explain what you did, why it mattered, and what you learned
+- **Video that feels natural** — Walk through projects in your own words, no time limits
+- **Private by default** — Share via a unique link you control; revoke anytime
+- **Built for skimming** — Clean, professional format hiring managers can review in minutes
+
+## Tech Stack
+
+- **Frontend**: React with TypeScript
+- **Backend**: Supabase (Auth, Database, Storage)
+- **Database**: PostgreSQL
+- **Auth**: LinkedIn OAuth
+
+## Project Status
+
+Currently in the **Discovery** phase. Core documentation complete:
+
+- [x] Vision and product definition
+- [x] Feature specification
+- [x] Technical constraints
+- [ ] Architecture design
+- [ ] Implementation
+- [ ] Launch
+
+## Documentation
+
+- [`docs/vision.md`](docs/vision.md) — Why this exists, who it's for
+- [`docs/spec.md`](docs/spec.md) — Features, user flows, acceptance criteria
+- [`docs/constraints.md`](docs/constraints.md) — Technical limits and privacy principles
+
+## Development
+
+This project uses spec-first development with Claude Code.
 
 ```bash
-# Copy this kit to your project
-cp -r spec-first-kit/. your-project/
+# Define architecture
+/interview-architecture
 
-# Initialize git
-cd your-project
-git init
+# Implement a feature
+/implement [feature name]
 
-# Start Claude Code and run the project interview
-claude
-> /interview-project
+# Review and commit
+/commit
 ```
-
-The interview will ask you questions and generate:
-- `CLAUDE.md` - Project overview for Claude
-- `docs/vision.md` - Why this exists
-- `docs/spec.md` - What it does
-- `docs/constraints.md` - Hard limits
-
-### Defining Architecture
-
-```
-> /interview-architecture
-```
-
-This generates `docs/architecture.md` and scaffolds your project structure.
-
-### Building Features
-
-```
-> /implement [feature from spec]
-```
-
-This implements features according to the spec, following architecture patterns.
-
-### Committing Changes
-
-```
-> /commit
-```
-
-This runs all review agents (alignment, security, performance, best practices), generates a commit message, and commits.
-
-## Available Commands
-
-### Discovery & Planning
-
-| Command | Purpose |
-|---------|---------|
-| `/interview-project` | Start a new project—generates vision, spec, constraints |
-| `/interview-architecture` | Design technical architecture |
-| `/interview-feature` | Add a new feature to the spec |
-
-### Implementation
-
-| Command | Purpose |
-|---------|---------|
-| `/implement [feature]` | Build a feature from spec |
-| `/research [topic]` | Look up technical information |
-
-### Review
-
-| Command | Purpose |
-|---------|---------|
-| `/review-alignment` | Check changes against vision/spec |
-| `/review-security` | Security vulnerability scan |
-| `/review-performance` | Performance issue detection |
-| `/review-best-practices` | Code quality review |
-
-### Workflow
-
-| Command | Purpose |
-|---------|---------|
-| `/commit` | Full review + commit |
-| `/commit --quick` | Quick commit with minimal checks |
-| `/audit` | Comprehensive project health check |
-| `/sync-docs` | Update docs to match code reality |
-
-## Workflow
-
-### Typical Development Session
-
-```
-# Start your day
-> /audit                          # Check project health
-
-# Add a feature
-> /interview-feature              # Define it in the spec
-> /implement [feature]            # Build it
-> /commit                         # Review and commit
-
-# Continue
-> /implement [next feature]
-> /commit
-
-# End of sprint
-> /audit                          # Full health check
-> /sync-docs                      # Ensure docs are current
-```
-
-### Before Major Releases
-
-```
-> /audit                          # Comprehensive review
-> /sync-docs                      # Documentation current
-> /review-security                # Full security scan
-```
-
-## File Structure
-
-```
-your-project/
-├── CLAUDE.md                     # Project overview for Claude
-├── .claude/
-│   └── commands/                 # All the slash commands
-│       ├── interview-project.md
-│       ├── interview-architecture.md
-│       ├── interview-feature.md
-│       ├── implement.md
-│       ├── research.md
-│       ├── review-alignment.md
-│       ├── review-security.md
-│       ├── review-performance.md
-│       ├── review-best-practices.md
-│       ├── commit.md
-│       ├── audit.md
-│       └── sync-docs.md
-├── docs/
-│   ├── vision.md                 # Why this exists
-│   ├── spec.md                   # What it does
-│   ├── constraints.md            # Hard limits
-│   └── architecture.md           # How it's built
-└── [your code here]
-```
-
-## Customization
-
-### Adding Domain-Specific Research
-
-Create specialized research commands:
-
-```markdown
-# .claude/commands/research-swift.md
-
-You are a Swift/iOS research agent. Prioritize:
-1. Apple developer documentation
-2. WWDC sessions
-3. Swift evolution proposals
-4. Swift forums
-
-[rest of research template]
-```
-
-### Adding Custom Review Checks
-
-Create project-specific review agents:
-
-```markdown
-# .claude/commands/review-accessibility.md
-
-You are an accessibility auditor. Check for:
-- VoiceOver support
-- Dynamic Type support
-- Color contrast
-- Touch target sizes
-[etc.]
-```
-
-### Adjusting Commit Strictness
-
-Edit `.claude/commands/commit.md` to change what blocks commits vs. what's just noted.
-
-## Tips
-
-1. **Run `/interview-project` thoroughly**: Better specs = better code
-2. **Commit often**: Small commits are easier to review and revert
-3. **Use `/research` liberally**: Better to look things up than guess
-4. **Run `/audit` weekly**: Catch drift before it accumulates
-5. **Keep specs updated**: When requirements change, update docs first
-
-## Why This Works
-
-- **AI needs clear specs**: Ambiguity leads to wrong implementations
-- **Review catches AI mistakes**: Adversarial agents find issues
-- **Documentation stays fresh**: Docs are part of the workflow, not afterthought
-- **Human stays in control**: You define what to build; AI helps build it
 
 ## License
 
-MIT - Use this however you want.
+TBD
