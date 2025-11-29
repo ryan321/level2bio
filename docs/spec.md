@@ -109,11 +109,11 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want to sign up with LinkedIn so that I can get started quickly without filling out forms.
 - **Priority**: Must Have
 - **Acceptance criteria**:
-  - [ ] Candidate can sign up with LinkedIn OAuth
-  - [ ] Basic info (name, headline, profile photo) pre-filled from LinkedIn
+  - [x] Candidate can sign up with LinkedIn OAuth
+  - [x] Basic info (name, headline, profile photo) pre-filled from LinkedIn
   - [ ] Candidate can add a backup email for account recovery
-  - [ ] Session persists across browser restarts
-  - [ ] Candidate can log out
+  - [x] Session persists across browser restarts
+  - [x] Candidate can log out
 - **User flow**:
   1. Candidate lands on Level2.bio
   2. Clicks "Sign up with LinkedIn"

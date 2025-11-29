@@ -58,6 +58,22 @@ All specs live in `/docs`. Consult before making changes:
 
 - [x] Discovery (vision, spec, constraints)
 - [x] Architecture
-- [ ] Implementation
+- [x] Implementation (in progress)
 - [ ] Verification
 - [ ] Ship
+
+### Implementation Progress
+
+**Completed:**
+- Project scaffolding (Vite + React + TypeScript)
+- Database schema (users, work_stories, share_links)
+- Supabase client setup with typed queries
+- Authentication system (mock for dev, LinkedIn OAuth for prod)
+- Protected routes and auth context
+- Marketing homepage with features grid
+
+**Next up:**
+- Work Stories CRUD (create, edit, delete)
+- Dashboard with story list
+- Share links generation
+- Public profile viewer
