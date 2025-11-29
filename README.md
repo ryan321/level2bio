@@ -10,41 +10,84 @@ Level2.bio gives job seekers a private, structured way to tell the real story be
 
 **For hiring managers**: Get the context you wish you had before scheduling interviews. Understand a candidate's reasoning and impact in minutes, not hours.
 
-## The Problem
+## Getting Started
 
-Modern hiring is broken by shallow signals:
+### Prerequisites
 
-- Resumes reduce complex work to one-line bullets
-- Recruiters screen in 7-10 seconds
-- Great candidates look average on paper
-- LinkedIn is too public and performative
-- Portfolios take too much effort to build
-- Loom videos feel awkward and unguided
+- Node.js 18+
+- npm or yarn
+- A Supabase account (free tier works)
 
-## The Solution
+### Setup
 
-Level2.bio is the missing layer between a resume and an interview:
+1. **Clone and install dependencies**
 
-- **Work stories, not bullet points** — Guided templates help you explain what you did, why it mattered, and what you learned
-- **Video that feels natural** — Walk through projects in your own words, no time limits
-- **Private by default** — Share via a unique link you control; revoke anytime
-- **Built for skimming** — Clean, professional format hiring managers can review in minutes
+   ```bash
+   git clone <repo-url>
+   cd level2bio
+   npm install
+   ```
+
+2. **Configure environment variables**
+
+   Copy the example environment file:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` with your values:
+
+   ```bash
+   # Required: Get these from your Supabase project dashboard
+   # (Settings > API)
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+
+   # For local development, use mock auth (no real LinkedIn needed)
+   VITE_USE_MOCK_AUTH=true
+   ```
+
+3. **Set up the database**
+
+   In your Supabase dashboard, go to the SQL Editor and run the contents of:
+   ```
+   supabase/migrations/001_initial_schema.sql
+   ```
+
+4. **Start the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+5. **Open in browser**
+
+   Visit [http://localhost:5173](http://localhost:5173)
+
+### Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server at localhost:5173 |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint |
 
 ## Tech Stack
 
-- **Frontend**: React with TypeScript
+- **Frontend**: React 19 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui
 - **Backend**: Supabase (Auth, Database, Storage)
-- **Database**: PostgreSQL
-- **Auth**: LinkedIn OAuth
+- **Database**: PostgreSQL (via Supabase)
+- **Auth**: LinkedIn OAuth (mock auth available for development)
 
 ## Project Status
-
-Currently in the **Discovery** phase. Core documentation complete:
 
 - [x] Vision and product definition
 - [x] Feature specification
 - [x] Technical constraints
-- [ ] Architecture design
+- [x] Architecture design
 - [ ] Implementation
 - [ ] Launch
 
@@ -53,20 +96,21 @@ Currently in the **Discovery** phase. Core documentation complete:
 - [`docs/vision.md`](docs/vision.md) — Why this exists, who it's for
 - [`docs/spec.md`](docs/spec.md) — Features, user flows, acceptance criteria
 - [`docs/constraints.md`](docs/constraints.md) — Technical limits and privacy principles
+- [`docs/architecture.md`](docs/architecture.md) — Technical architecture and decisions
 
-## Development
+## Development Workflow
 
 This project uses spec-first development with Claude Code.
 
 ```bash
-# Define architecture
-/interview-architecture
-
-# Implement a feature
+# Implement a feature from the spec
 /implement [feature name]
 
-# Review and commit
+# Review and commit changes
 /commit
+
+# Full project health check
+/audit
 ```
 
 ## License
