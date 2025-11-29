@@ -15,6 +15,7 @@ export interface Database {
       users: {
         Row: {
           id: string
+          auth_id: string | null
           linkedin_id: string
           email: string | null
           name: string
@@ -26,6 +27,7 @@ export interface Database {
         }
         Insert: {
           id?: string
+          auth_id?: string | null
           linkedin_id: string
           email?: string | null
           name: string
@@ -37,6 +39,7 @@ export interface Database {
         }
         Update: {
           id?: string
+          auth_id?: string | null
           linkedin_id?: string
           email?: string | null
           name?: string

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 
-export function PublicProfilePage() {
+export default function PublicProfilePage() {
   const { token } = useParams<{ token: string }>()
 
   if (!token) {

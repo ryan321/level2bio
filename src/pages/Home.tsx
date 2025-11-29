@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ROUTES } from '../lib/constants'
 
-export function Home() {
+export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <h1 className="text-4xl font-bold mb-4">Level2.bio</h1>

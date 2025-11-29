@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ROUTES } from '../lib/constants'
 
-export function NotFound() {
+export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-8">
       <h1 className="text-2xl font-bold mb-4">Page Not Found</h1>
