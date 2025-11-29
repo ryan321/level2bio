@@ -1,13 +1,14 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ROUTES } from './lib/constants'
+import { AuthProvider, ProtectedRoute } from '@/features/auth'
+import { ROUTES } from '@/lib/constants'
 
 // Lazy load pages for code splitting
-const Home = lazy(() => import('./pages/Home'))
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-const PublicProfilePage = lazy(() => import('./pages/PublicProfilePage'))
-const NotFound = lazy(() => import('./pages/NotFound'))
+const Home = lazy(() => import('@/pages/Home'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const PublicProfilePage = lazy(() => import('@/pages/PublicProfilePage'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,16 +31,25 @@ function LoadingFallback() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path={ROUTES.HOME} element={<Home />} />
-            <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-            <Route path={ROUTES.PUBLIC_PROFILE} element={<PublicProfilePage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path={ROUTES.HOME} element={<Home />} />
+              <Route
+                path={ROUTES.DASHBOARD}
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path={ROUTES.PUBLIC_PROFILE} element={<PublicProfilePage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }
