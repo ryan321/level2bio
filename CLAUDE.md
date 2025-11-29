@@ -57,7 +57,7 @@ All specs live in `/docs`. Consult before making changes:
 ## Current Phase
 
 - [x] Discovery (vision, spec, constraints)
-- [ ] Architecture
+- [x] Architecture
 - [ ] Implementation
 - [ ] Verification
 - [ ] Ship
