@@ -4,6 +4,8 @@ import {
   useEffect,
   useState,
   useCallback,
+  useMemo,
+  useRef,
   type ReactNode,
 } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -43,18 +45,58 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
-// Helper: Extract user info from Supabase session
+// Type guard for string values
+const isString = (val: unknown): val is string => typeof val === 'string' && val.length > 0
+
+// Helper: Extract user info from Supabase session with proper type validation
 function sessionToAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown> }): AuthUser {
+  const metadata = user.user_metadata || {}
+
+  const getName = (): string => {
+    if (isString(metadata.name)) return metadata.name
+    if (isString(metadata.full_name)) return metadata.full_name
+    return user.email?.split('@')[0] || 'User'
+  }
+
+  const getProfilePhoto = (): string | null => {
+    if (isString(metadata.avatar_url)) return metadata.avatar_url
+    if (isString(metadata.picture)) return metadata.picture
+    return null
+  }
+
   return {
     id: user.id,
     email: user.email ?? null,
-    name: (user.user_metadata?.name as string) ??
-          (user.user_metadata?.full_name as string) ??
-          'User',
-    headline: (user.user_metadata?.headline as string) ?? null,
-    profilePhotoUrl: (user.user_metadata?.avatar_url as string) ??
-                     (user.user_metadata?.picture as string) ?? null,
+    name: getName(),
+    headline: isString(metadata.headline) ? metadata.headline : null,
+    profilePhotoUrl: getProfilePhoto(),
   }
+}
+
+// Sanitize error messages to prevent information leakage
+function getPublicErrorMessage(error: Error | { message: string }): string {
+  const message = error.message.toLowerCase()
+
+  // Prevent email enumeration
+  if (message.includes('already registered') || message.includes('already exists')) {
+    return 'An account with this email may already exist. Try signing in instead.'
+  }
+  if (message.includes('invalid login') || message.includes('invalid credentials')) {
+    return 'Invalid email or password'
+  }
+  if (message.includes('user not found')) {
+    return 'Invalid email or password'
+  }
+  // Hide database errors
+  if (message.includes('database') || message.includes('db') || message.includes('sql')) {
+    return 'Something went wrong. Please try again.'
+  }
+  // Hide internal errors
+  if (message.includes('internal') || message.includes('server')) {
+    return 'Something went wrong. Please try again.'
+  }
+
+  return error.message
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -132,31 +174,53 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
+  // Track if component is mounted to prevent state updates after unmount
+  const isMountedRef = useRef(true)
+  const isSyncingRef = useRef(false)
+
   // Subscribe to auth state changes
   useEffect(() => {
-    let isSyncing = false
+    isMountedRef.current = true
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!isMountedRef.current) return
+
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
           const authUser = sessionToAuthUser(session.user)
           setAuthUser(authUser)
 
-          // Prevent duplicate syncs
-          if (isSyncing) return
-          isSyncing = true
+          // Prevent duplicate syncs using ref (persists across renders)
+          if (isSyncingRef.current) return
+          isSyncingRef.current = true
 
           // Defer DB operations to avoid blocking the auth state callback
-          setTimeout(async () => {
-            const userRecord = await syncUserRecord(authUser)
-            setUser(userRecord)
-            setIsLoading(false)
-            isSyncing = false
-          }, 0)
+          queueMicrotask(async () => {
+            try {
+              const userRecord = await syncUserRecord(authUser)
+              if (isMountedRef.current) {
+                setUser(userRecord)
+                if (!userRecord) {
+                  setError('Failed to load user profile. Please try again.')
+                }
+              }
+            } catch (err) {
+              if (isMountedRef.current) {
+                setError('Failed to load user profile. Please try again.')
+              }
+            } finally {
+              if (isMountedRef.current) {
+                setIsLoading(false)
+              }
+              isSyncingRef.current = false
+            }
+          })
         } else if (event === 'SIGNED_OUT') {
           setAuthUser(null)
           setUser(null)
           setIsLoading(false)
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refresh succeeded - no action needed
         } else {
           setIsLoading(false)
         }
@@ -164,6 +228,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     )
 
     return () => {
+      isMountedRef.current = false
       subscription.unsubscribe()
     }
   }, [syncUserRecord])
@@ -178,8 +243,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       },
     })
     if (error) {
-      setError(error.message)
-      throw error
+      const publicMessage = getPublicErrorMessage(error)
+      setError(publicMessage)
+      throw new Error(publicMessage)
     }
   }, [])
 
@@ -191,8 +257,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       password,
     })
     if (error) {
-      setError(error.message)
-      throw error
+      const publicMessage = getPublicErrorMessage(error)
+      setError(publicMessage)
+      throw new Error(publicMessage)
     }
     // With email confirmation disabled, user is immediately signed in
     // onAuthStateChange will handle setting authUser
@@ -206,8 +273,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       password,
     })
     if (error) {
-      setError(error.message)
-      throw error
+      const publicMessage = getPublicErrorMessage(error)
+      setError(publicMessage)
+      throw new Error(publicMessage)
     }
   }, [])
 
@@ -216,12 +284,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null)
     const { error } = await supabase.auth.signOut()
     if (error) {
-      setError(error.message)
-      throw error
+      const publicMessage = getPublicErrorMessage(error)
+      setError(publicMessage)
+      throw new Error(publicMessage)
     }
   }, [])
 
-  const value: AuthContextValue = {
+  // Memoize context value to prevent unnecessary re-renders in consumers
+  const value = useMemo<AuthContextValue>(() => ({
     authUser,
     user,
     isLoading,
@@ -230,7 +300,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signIn,
     signOut,
-  }
+  }), [authUser, user, isLoading, error, signInWithLinkedIn, signUp, signIn, signOut])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

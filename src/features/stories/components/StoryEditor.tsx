@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { WorkStory } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
+import { useDialog } from '@/hooks/useDialog'
 import { ROUTES } from '@/lib/constants'
 
 interface StoryEditorProps {
@@ -29,6 +30,7 @@ function extractYouTubeId(url: string): string | null {
 export function StoryEditor({ story }: StoryEditorProps) {
   const navigate = useNavigate()
   const updateStory = useUpdateStory()
+  const { showAlert, DialogContainer } = useDialog()
   const template = templates[story.template_type as TemplateType]
 
   // Local state for form
@@ -91,13 +93,13 @@ export function StoryEditor({ story }: StoryEditorProps) {
   const handlePublish = async () => {
     // Validate
     if (!title.trim()) {
-      alert('Please add a title for your story.')
+      showAlert('Please add a title for your story.', 'Missing Title')
       return
     }
 
     const filledPrompts = Object.values(responses).filter((v) => v && v.trim()).length
     if (filledPrompts === 0) {
-      alert('Please fill in at least one prompt before publishing.')
+      showAlert('Please fill in at least one prompt before publishing.', 'Missing Content')
       return
     }
 
@@ -115,7 +117,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
       navigate(ROUTES.DASHBOARD)
     } catch (err) {
       console.error('Publish failed:', err)
-      alert('Failed to publish. Please try again.')
+      showAlert('Failed to publish. Please try again.', 'Error')
     } finally {
       setIsSaving(false)
     }
@@ -130,7 +132,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
       })
     } catch (err) {
       console.error('Unpublish failed:', err)
-      alert('Failed to unpublish. Please try again.')
+      showAlert('Failed to unpublish. Please try again.', 'Error')
     } finally {
       setIsSaving(false)
     }
@@ -147,6 +149,8 @@ export function StoryEditor({ story }: StoryEditorProps) {
   const isPublished = story.status === 'published'
 
   return (
+    <>
+    {DialogContainer}
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
@@ -273,5 +277,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
         )}
       </div>
     </div>
+    </>
   )
 }

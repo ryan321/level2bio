@@ -8,12 +8,14 @@ import {
   useCreateStory,
 } from '@/features/stories'
 import type { TemplateType } from '@/features/stories'
+import { useDialog } from '@/hooks/useDialog'
 import { ROUTES } from '@/lib/constants'
 
 export default function StoryEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { showAlert, DialogContainer } = useDialog()
   const isNew = id === 'new'
 
   // For new stories, track creation state
@@ -40,7 +42,7 @@ export default function StoryEditorPage() {
       navigate(ROUTES.STORY_EDITOR.replace(':id', newStory.id), { replace: true })
     } catch (err) {
       console.error('Failed to create story:', err)
-      alert('Failed to create story. Please try again.')
+      showAlert('Failed to create story. Please try again.', 'Error')
       setIsCreating(false)
     }
   }
@@ -75,22 +77,25 @@ export default function StoryEditorPage() {
   // New story - show template selector
   if (isNew && !isCreating) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="mb-8">
-            <Link
-              to={ROUTES.DASHBOARD}
-              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Dashboard
-            </Link>
+      <>
+        {DialogContainer}
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-4xl mx-auto px-6 py-12">
+            <div className="mb-8">
+              <Link
+                to={ROUTES.DASHBOARD}
+                className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Dashboard
+              </Link>
+            </div>
+            <TemplateSelector onSelect={handleSelectTemplate} />
           </div>
-          <TemplateSelector onSelect={handleSelectTemplate} />
         </div>
-      </div>
+      </>
     )
   }
 
