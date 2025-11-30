@@ -1,9 +1,6 @@
 import { Navigate } from 'react-router-dom'
-import { useAuth, LoginButton, EmailAuthForm } from '@/features/auth'
+import { useAuth, AuthForm } from '@/features/auth'
 import { ROUTES } from '@/lib/constants'
-
-// Enable email auth (alternative to LinkedIn OAuth)
-const emailAuthEnabled = import.meta.env.VITE_EMAIL_AUTH_ENABLED === 'true'
 
 export default function Home() {
   const { authUser, isLoading } = useAuth()
@@ -24,11 +21,7 @@ export default function Home() {
           A private space to explain the "why" and "how" behind your work.
           Share it only when you choose.
         </p>
-        {emailAuthEnabled ? (
-          <EmailAuthForm />
-        ) : (
-          <LoginButton className="bg-blue-600 text-white hover:bg-blue-700 text-lg" />
-        )}
+        <AuthForm />
       </section>
 
       {/* Problem Section */}
@@ -191,17 +184,13 @@ export default function Home() {
             Create your first work story in minutes. Share it when you're ready.
           </p>
           <div className="flex justify-center">
-            {emailAuthEnabled ? (
-              <a
-                href="#top"
-                onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                className="bg-blue-600 text-white hover:bg-blue-700 text-lg px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                Get Started
-              </a>
-            ) : (
-              <LoginButton className="bg-blue-600 text-white hover:bg-blue-700 text-lg" />
-            )}
+            <a
+              href="#top"
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              className="bg-blue-600 text-white hover:bg-blue-700 text-lg px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Get Started
+            </a>
           </div>
         </div>
       </section>
