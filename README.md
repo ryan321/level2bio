@@ -88,8 +88,8 @@ Level2.bio gives job seekers a private, structured way to tell the real story be
 - [x] Feature specification
 - [x] Technical constraints
 - [x] Architecture design
-- [ ] Implementation
-- [ ] Launch
+- [x] Implementation
+- [x] Deployed to [level2.bio](https://level2.bio)
 
 ## Documentation
 
@@ -112,6 +112,33 @@ This project uses spec-first development with Claude Code.
 # Full project health check
 /audit
 ```
+
+## Claude Code Conversations
+
+This entire project was built using [Claude Code](https://claude.com/claude-code). You can read the full conversation history to see how it was developed.
+
+### Reading the Conversations
+
+- **[User Prompts](docs/conversations/user-prompts.md)** — All user-typed messages in one document
+- **[Detailed Conversations](docs/conversations/detailed/)** — Full conversations with tool calls and outputs
+
+### Regenerating Conversation Exports
+
+```bash
+npx ts-node scripts/export-conversations.ts
+```
+
+### Token Usage
+
+| Metric | Tokens |
+|--------|--------|
+| Input tokens | 264,150 |
+| Output tokens | 488,474 |
+| Cache creation | 8,451,138 |
+| Cache read | 183,905,199 |
+| **Total** | **~193 million** |
+
+Estimated cost: ~$95 (based on Claude Sonnet pricing)
 
 ## License
 
