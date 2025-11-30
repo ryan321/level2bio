@@ -231,6 +231,10 @@ function formatUserContent(content: ContentBlock[] | string): string {
     if (content.includes('<command-message>') && content.includes('is running')) {
       return ''
     }
+    // Skip context continuation summaries
+    if (content.includes('This session is being continued from a previous conversation')) {
+      return ''
+    }
     return content
   }
 
@@ -238,6 +242,10 @@ function formatUserContent(content: ContentBlock[] | string): string {
   const textParts: string[] = []
   for (const block of content) {
     if (block.type === 'text' && block.text) {
+      // Skip context continuation summaries
+      if (block.text.includes('This session is being continued from a previous conversation')) {
+        continue
+      }
       textParts.push(block.text)
     }
   }
