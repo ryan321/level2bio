@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { WorkStory } from '@/types'
+import type { WorkStory, StoryAsset } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
+import { MarkdownEditor } from './MarkdownEditor'
 import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import { ROUTES } from '@/lib/constants'
+import { useAuth } from '@/features/auth'
 
 interface StoryEditorProps {
   story: WorkStory
@@ -12,6 +14,7 @@ interface StoryEditorProps {
 
 export function StoryEditor({ story }: StoryEditorProps) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const updateStory = useUpdateStory()
   const template = templates[story.template_type as TemplateType]
 
@@ -21,6 +24,9 @@ export function StoryEditor({ story }: StoryEditorProps) {
     (story.responses as Record<string, string>) || {}
   )
   const [videoUrl, setVideoUrl] = useState(story.video_url || '')
+  const [assets, setAssets] = useState<StoryAsset[]>(
+    (story.assets as unknown as StoryAsset[]) || []
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -30,9 +36,10 @@ export function StoryEditor({ story }: StoryEditorProps) {
     const hasChanges =
       title !== story.title ||
       videoUrl !== (story.video_url || '') ||
-      JSON.stringify(responses) !== JSON.stringify(story.responses || {})
+      JSON.stringify(responses) !== JSON.stringify(story.responses || {}) ||
+      JSON.stringify(assets) !== JSON.stringify(story.assets || [])
     setHasUnsavedChanges(hasChanges)
-  }, [title, responses, videoUrl, story])
+  }, [title, responses, videoUrl, assets, story])
 
   // Auto-save with debounce
   const save = useCallback(async () => {
@@ -46,6 +53,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
           title,
           responses,
           video_url: videoUrl || null,
+          assets: assets as unknown as undefined,
         },
       })
       setLastSaved(new Date())
@@ -55,7 +63,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
     } finally {
       setIsSaving(false)
     }
-  }, [story.id, title, responses, videoUrl, hasUnsavedChanges, isSaving, updateStory])
+  }, [story.id, title, responses, videoUrl, assets, hasUnsavedChanges, isSaving, updateStory])
 
   // Debounced auto-save
   useEffect(() => {
@@ -70,6 +78,10 @@ export function StoryEditor({ story }: StoryEditorProps) {
 
   const handleResponseChange = (key: string, value: string) => {
     setResponses((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const handleAssetUploaded = (asset: StoryAsset) => {
+    setAssets((prev) => [...prev, asset])
   }
 
   const handleSaveAndExit = async () => {
@@ -124,28 +136,29 @@ export function StoryEditor({ story }: StoryEditorProps) {
       </div>
 
       {/* Prompts */}
-      <div className="space-y-8">
-        {template.prompts.map((prompt) => (
-          <div key={prompt.key}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {prompt.label}
-            </label>
-            {prompt.hint && (
-              <p className="text-sm text-gray-500 mb-2">{prompt.hint}</p>
-            )}
-            <textarea
-              value={responses[prompt.key] || ''}
-              onChange={(e) => handleResponseChange(prompt.key, e.target.value)}
-              placeholder={prompt.placeholder}
-              rows={5}
-              className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-y"
-            />
-            <div className="text-xs text-gray-400 mt-1 text-right">
-              {(responses[prompt.key] || '').length} characters
+      {user && (
+        <div className="space-y-8">
+          {template.prompts.map((prompt) => (
+            <div key={prompt.key}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {prompt.label}
+              </label>
+              {prompt.hint && (
+                <p className="text-sm text-gray-500 mb-2">{prompt.hint}</p>
+              )}
+              <MarkdownEditor
+                value={responses[prompt.key] || ''}
+                onChange={(value) => handleResponseChange(prompt.key, value)}
+                placeholder={prompt.placeholder}
+                rows={5}
+                userId={user.id}
+                storyId={story.id}
+                onAssetUploaded={handleAssetUploaded}
+              />
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Video Section */}
       <div className="mt-10 pt-8 border-t">
@@ -183,6 +196,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
           </p>
         )}
       </div>
+
     </div>
   )
 }

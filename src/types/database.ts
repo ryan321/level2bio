@@ -59,6 +59,7 @@ export interface Database {
           title: string
           responses: Json
           video_url: string | null
+          assets: Json
           display_order: number
           created_at: string
           updated_at: string
@@ -70,6 +71,7 @@ export interface Database {
           title: string
           responses?: Json
           video_url?: string | null
+          assets?: Json
           display_order?: number
           created_at?: string
           updated_at?: string
@@ -81,6 +83,7 @@ export interface Database {
           title?: string
           responses?: Json
           video_url?: string | null
+          assets?: Json
           display_order?: number
           created_at?: string
           updated_at?: string
@@ -278,3 +281,15 @@ export interface LessonsLearnedResponses {
 }
 
 export type StoryResponses = ProjectResponses | RoleHighlightResponses | LessonsLearnedResponses
+
+// Story asset types
+export type AssetType = 'image' | 'video' | 'pdf'
+
+export interface StoryAsset {
+  id: string
+  name: string
+  type: AssetType
+  size: number
+  url: string
+  mimeType: string
+}

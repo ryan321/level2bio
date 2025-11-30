@@ -3,7 +3,7 @@ import Markdown from 'react-markdown'
 import { usePublicProfile } from '@/features/profile'
 import { templates, type TemplateType } from '@/features/stories'
 import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
-import type { WorkStory } from '@/types'
+import type { WorkStory, StoryAsset } from '@/types'
 
 export default function PublicProfilePage() {
   const { token } = useParams<{ token: string }>()
@@ -102,6 +102,7 @@ export default function PublicProfilePage() {
 function StoryViewer({ story }: { story: WorkStory }) {
   const template = templates[story.template_type as TemplateType]
   const responses = story.responses as Record<string, string>
+  const assets = (story.assets as unknown as StoryAsset[]) || []
 
   return (
     <article className="bg-white rounded-xl shadow-sm p-6">
@@ -135,7 +136,55 @@ function StoryViewer({ story }: { story: WorkStory }) {
           <VideoPlayer url={story.video_url} />
         </div>
       )}
+
+      {assets.length > 0 && (
+        <div className="mt-6 pt-6 border-t">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Downloads</h3>
+          <div className="space-y-2">
+            {assets.map((asset) => (
+              <AssetDownloadLink key={asset.id} asset={asset} />
+            ))}
+          </div>
+        </div>
+      )}
     </article>
+  )
+}
+
+function AssetDownloadLink({ asset }: { asset: StoryAsset }) {
+  const iconByType = {
+    image: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    video: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    pdf: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+  }
+
+  return (
+    <a
+      href={asset.url}
+      download={asset.name}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+    >
+      <span className="text-gray-400">{iconByType[asset.type]}</span>
+      <span className="truncate">{asset.name}</span>
+      <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+    </a>
   )
 }
 
