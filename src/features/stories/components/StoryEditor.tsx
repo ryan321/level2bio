@@ -16,6 +16,99 @@ interface StoryEditorProps {
   story: WorkStory
 }
 
+/** Help popup showing formatting options */
+function FormattingHelp({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-labelledby="help-title"
+        aria-modal="true"
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 id="help-title" className="text-lg font-semibold">Formatting Guide</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="Close help"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="space-y-6 text-sm">
+            {/* Markdown basics */}
+            <section>
+              <h3 className="font-medium text-gray-900 mb-2">Markdown Formatting</h3>
+              <div className="bg-gray-50 rounded-lg p-3 space-y-2 font-mono text-xs">
+                <div><span className="text-gray-500">**bold**</span> → <strong>bold</strong></div>
+                <div><span className="text-gray-500">*italic*</span> → <em>italic</em></div>
+                <div><span className="text-gray-500">[link text](https://...)</span> → <span className="text-blue-600 underline">link text</span></div>
+                <div><span className="text-gray-500">- item</span> → bullet list</div>
+                <div><span className="text-gray-500">1. item</span> → numbered list</div>
+              </div>
+            </section>
+
+            {/* YouTube embeds */}
+            <section>
+              <h3 className="font-medium text-gray-900 mb-2">Embed YouTube Videos</h3>
+              <p className="text-gray-600 mb-2">
+                To embed a video inline, use "YouTube" as the link text:
+              </p>
+              <div className="bg-gray-50 rounded-lg p-3 font-mono text-xs">
+                <span className="text-gray-500">[YouTube](https://youtube.com/watch?v=...)</span>
+              </div>
+              <p className="text-gray-500 mt-2 text-xs">
+                The video will appear embedded in your story. Private and unlisted videos work too.
+              </p>
+            </section>
+
+            {/* File uploads */}
+            <section>
+              <h3 className="font-medium text-gray-900 mb-2">Upload Files</h3>
+              <p className="text-gray-600 mb-2">
+                Add images, videos, or PDFs to your story:
+              </p>
+              <ul className="text-gray-600 space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-500">•</span>
+                  Click "Attach" to upload a file
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-500">•</span>
+                  Drag and drop files onto the editor
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-blue-500">•</span>
+                  Paste images directly from clipboard
+                </li>
+              </ul>
+              <p className="text-gray-500 mt-2 text-xs">
+                Supported: Images (JPG, PNG, GIF, WebP), Videos (MP4, WebM, MOV), PDFs. Max 50MB.
+              </p>
+            </section>
+
+            {/* Preview */}
+            <section>
+              <h3 className="font-medium text-gray-900 mb-2">Preview</h3>
+              <p className="text-gray-600">
+                Click the "Preview" button to see how your content will look to viewers.
+              </p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function StoryEditor({ story }: StoryEditorProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -34,6 +127,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [showHelp, setShowHelp] = useState(false)
 
   // Use refs to avoid stale closures in the save callback
   const titleRef = useRef(title)
@@ -126,15 +220,30 @@ export function StoryEditor({ story }: StoryEditorProps) {
             )}
           </div>
         </div>
-        <button
-          onClick={handleSaveAndExit}
-          disabled={isSaving}
-          aria-label="Save and return to dashboard"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          Done
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+            aria-label="Formatting help"
+            title="Formatting help"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleSaveAndExit}
+            disabled={isSaving}
+            aria-label="Save and return to dashboard"
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
+            Done
+          </button>
+        </div>
       </div>
+
+      {/* Help popup */}
+      <FormattingHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
 
       {/* Title */}
       <div className="mb-8">
