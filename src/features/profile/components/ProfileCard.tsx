@@ -49,6 +49,9 @@ export const ProfileCard = memo(function ProfileCard({
   )
   const [editingExpiration, setEditingExpiration] = useState(false)
   const [expiresAt, setExpiresAt] = useState(toDateTimeLocal(profile.expires_at))
+  const [editingDetails, setEditingDetails] = useState(false)
+  const [editHeadline, setEditHeadline] = useState(profile.headline || '')
+  const [editBio, setEditBio] = useState(profile.bio || '')
 
   const shareUrl = `${window.location.origin}/p/${profile.share_token}`
 
@@ -163,6 +166,38 @@ export const ProfileCard = memo(function ProfileCard({
     }
   }
 
+  const handleSaveDetails = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        profileId: profile.id,
+        userId,
+        headline: editHeadline || null,
+        bio: editBio || null,
+      })
+      setEditingDetails(false)
+    } catch (err) {
+      console.error('Failed to update profile details:', err)
+      showAlert('Failed to update profile details. Please try again.', 'Error')
+    }
+  }
+
+  const handleClearDetails = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        profileId: profile.id,
+        userId,
+        headline: null,
+        bio: null,
+      })
+      setEditHeadline('')
+      setEditBio('')
+      setEditingDetails(false)
+    } catch (err) {
+      console.error('Failed to clear profile details:', err)
+      showAlert('Failed to clear profile details. Please try again.', 'Error')
+    }
+  }
+
   const profileIsExpired = isExpired(profile.expires_at)
 
   return (
@@ -272,6 +307,93 @@ export const ProfileCard = memo(function ProfileCard({
         </div>
       ) : null}
 
+      {/* Profile details (headline/bio) edit section */}
+      {editingDetails ? (
+        <div className="border-t pt-3 mt-3 mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Profile Override
+          </label>
+          <p className="text-xs text-gray-500 mb-3">
+            Override the headline and bio for this specific profile. Leave blank to use your default.
+          </p>
+          <div className="space-y-3 mb-3">
+            <div>
+              <label htmlFor={`headline-${profile.id}`} className="block text-xs text-gray-600 mb-1">
+                Headline
+              </label>
+              <input
+                id={`headline-${profile.id}`}
+                type="text"
+                value={editHeadline}
+                onChange={(e) => setEditHeadline(e.target.value)}
+                placeholder="e.g., Senior Backend Engineer"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor={`bio-${profile.id}`} className="block text-xs text-gray-600 mb-1">
+                Bio
+              </label>
+              <textarea
+                id={`bio-${profile.id}`}
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder="A brief introduction tailored for this audience..."
+                rows={3}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            {(profile.headline || profile.bio) && (
+              <button
+                onClick={handleClearDetails}
+                disabled={updateProfile.isPending}
+                className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700"
+              >
+                Clear override
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setEditHeadline(profile.headline || '')
+                setEditBio(profile.bio || '')
+                setEditingDetails(false)
+              }}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveDetails}
+              disabled={updateProfile.isPending}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {updateProfile.isPending ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      ) : (profile.headline || profile.bio) ? (
+        <div className="text-sm text-gray-500 mb-3 border-t pt-3 mt-3">
+          <div className="flex items-start justify-between">
+            <div>
+              {profile.headline && (
+                <div className="font-medium text-gray-700">{profile.headline}</div>
+              )}
+              {profile.bio && (
+                <div className="text-gray-500 mt-1">{profile.bio}</div>
+              )}
+            </div>
+            <button
+              onClick={() => setEditingDetails(true)}
+              className="text-blue-600 hover:text-blue-700 text-xs ml-2 shrink-0"
+            >
+              Edit
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {/* Edit stories section */}
       {isEditing ? (
         <div className="border-t pt-3 mt-3">
@@ -318,6 +440,14 @@ export const ProfileCard = memo(function ProfileCard({
           >
             Edit stories
           </button>
+          {!profile.headline && !profile.bio && (
+            <button
+              onClick={() => setEditingDetails(true)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Customize
+            </button>
+          )}
           {!profile.expires_at && (
             <button
               onClick={() => setEditingExpiration(true)}
