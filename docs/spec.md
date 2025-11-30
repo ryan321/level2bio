@@ -51,29 +51,37 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - Very long text responses: Allow but encourage conciseness via UI hints
   - No video: Story is still valid and shareable
 
-#### 2. Private Link Sharing
+#### 2. Curated Profiles
 
-- **Description**: Candidates get a unique, private URL to share their Level2 profile; they can revoke or regenerate it anytime
-- **User story**: As a candidate, I want to share my profile via a private link so that only people I choose can see it.
+- **Description**: Candidates create curated profiles—collections of selected work stories tailored for specific audiences (e.g., "Backend Engineering", "Leadership Experience"). Each profile has its own shareable link.
+- **User story**: As a candidate, I want to create multiple curated profiles so that I can tailor what I show to different audiences.
 - **Priority**: Must Have
 - **Acceptance criteria**:
-  - [ ] Each candidate has a unique, unguessable share URL
-  - [ ] Link is disabled by default until candidate activates it
-  - [ ] Candidate can toggle link on/off at any time
-  - [ ] Candidate can regenerate a new link (old link stops working)
-  - [ ] Viewers without the link cannot access the profile
-  - [ ] Revoked links show a neutral "not available" message
+  - [ ] Candidate can create multiple profiles
+  - [ ] Each profile has a name (e.g., "Backend Focus", "Startup Role")
+  - [ ] Candidate selects which published stories to include in each profile
+  - [ ] Stories can be reordered within a profile
+  - [ ] Same story can appear in multiple profiles
+  - [ ] Optional: Override headline/bio per profile
+  - [ ] Each profile has its own unique, unguessable share URL
+  - [ ] Candidate can toggle profile link on/off
+  - [ ] Candidate can regenerate a profile's link (old link stops working)
+  - [ ] Optional expiration date on profile links
+  - [ ] Dashboard shows all profiles with their links and view counts
 - **User flow**:
-  1. Candidate finishes at least one work story
-  2. Clicks "Share" to see their unique link
-  3. Copies link to clipboard
-  4. Pastes into resume, application, or email
-  5. Can return to dashboard to disable or regenerate link
+  1. Candidate creates work stories
+  2. Clicks "Create Profile"
+  3. Names the profile (e.g., "Senior Backend Role")
+  4. Selects which stories to include and orders them
+  5. Optionally customizes headline/bio for this audience
+  6. Gets shareable link
+  7. Can create additional profiles for other audiences
 - **Error states**:
-  - Viewer opens revoked link: Show "This Level2.bio link is no longer available. The owner may have disabled or replaced it."
+  - Viewer opens revoked/expired link: Show "This Level2.bio link is no longer available. The owner may have disabled or replaced it."
   - Viewer opens malformed link: Show same neutral message (no distinction)
 - **Edge cases**:
-  - Candidate has no complete stories: Share button disabled with message "Finish at least one story to activate your link"
+  - Profile with no stories: Show profile header but "No stories in this profile" message
+  - All profiles deleted: Dashboard shows prompt to create first profile
 
 #### 3. Viewer Experience
 
@@ -279,19 +287,25 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 
 - **Fields**: id, linkedin_id, email, name, headline, bio, profile_photo_url, created_at, updated_at
 - **Constraints**: linkedin_id unique, email unique if provided
-- **Relationships**: Has many WorkStories, has one ShareLink
+- **Relationships**: Has many WorkStories, has many Profiles
 
 ### WorkStory
 
 - **Fields**: id, user_id, template_type, title, prompts_responses (JSON), video_url, status (draft/published), created_at, updated_at
 - **Constraints**: user_id required, status required
-- **Relationships**: Belongs to User
+- **Relationships**: Belongs to User, belongs to many Profiles (via ProfileStory)
 
-### ShareLink
+### Profile
 
-- **Fields**: id, user_id, token, is_active, created_at
-- **Constraints**: token unique and unguessable, user_id unique (one active link per user)
-- **Relationships**: Belongs to User
+- **Fields**: id, user_id, name, headline (optional override), bio (optional override), share_token, is_active, expires_at (optional), view_count, last_viewed_at, created_at, updated_at
+- **Constraints**: user_id required, share_token unique and unguessable
+- **Relationships**: Belongs to User, has many WorkStories (via ProfileStory, ordered)
+
+### ProfileStory (join table)
+
+- **Fields**: id, profile_id, work_story_id, display_order
+- **Constraints**: profile_id + work_story_id unique
+- **Relationships**: Belongs to Profile, belongs to WorkStory
 
 ## Non-Functional Requirements
 

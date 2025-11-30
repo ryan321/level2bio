@@ -1,8 +1,12 @@
 import { useAuth } from '@/features/auth'
-import { StoryList } from '@/features/stories'
+import { StoryList, useStories } from '@/features/stories'
+import { ProfileManager } from '@/features/profile'
 
 export default function Dashboard() {
   const { user, authUser, signOut } = useAuth()
+  const { data: stories } = useStories(user?.id)
+
+  const publishedStories = stories?.filter((s) => s.status === 'published') ?? []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,7 +26,12 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {user && <StoryList userId={user.id} />}
+        {user && (
+          <div className="space-y-8">
+            <ProfileManager userId={user.id} publishedStories={publishedStories} />
+            <StoryList userId={user.id} />
+          </div>
+        )}
       </div>
     </div>
   )

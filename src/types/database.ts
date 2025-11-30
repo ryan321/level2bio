@@ -134,6 +134,92 @@ export interface Database {
           }
         ]
       }
+      profiles: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          headline: string | null
+          bio: string | null
+          share_token: string
+          is_active: boolean
+          expires_at: string | null
+          view_count: number
+          last_viewed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          headline?: string | null
+          bio?: string | null
+          share_token: string
+          is_active?: boolean
+          expires_at?: string | null
+          view_count?: number
+          last_viewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          headline?: string | null
+          bio?: string | null
+          share_token?: string
+          is_active?: boolean
+          expires_at?: string | null
+          view_count?: number
+          last_viewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_user_id_fkey'
+            columns: ['user_id']
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      profile_stories: {
+        Row: {
+          id: string
+          profile_id: string
+          work_story_id: string
+          display_order: number
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          work_story_id: string
+          display_order?: number
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          work_story_id?: string
+          display_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profile_stories_profile_id_fkey'
+            columns: ['profile_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'profile_stories_work_story_id_fkey'
+            columns: ['work_story_id']
+            referencedRelation: 'work_stories'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -162,6 +248,14 @@ export type WorkStoryUpdate = Database['public']['Tables']['work_stories']['Upda
 export type ShareLink = Database['public']['Tables']['share_links']['Row']
 export type ShareLinkInsert = Database['public']['Tables']['share_links']['Insert']
 export type ShareLinkUpdate = Database['public']['Tables']['share_links']['Update']
+
+export type Profile = Database['public']['Tables']['profiles']['Row']
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
+
+export type ProfileStory = Database['public']['Tables']['profile_stories']['Row']
+export type ProfileStoryInsert = Database['public']['Tables']['profile_stories']['Insert']
+export type ProfileStoryUpdate = Database['public']['Tables']['profile_stories']['Update']
 
 // Story responses type (markdown per prompt)
 export interface ProjectResponses {

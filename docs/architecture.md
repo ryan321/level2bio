@@ -128,9 +128,10 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 
 | Model | Purpose | Key Fields | Relationships |
 |-------|---------|------------|---------------|
-| User | Candidate account | id, linkedin_id, email, name, headline, bio, profile_photo_url | Has many WorkStories, has one ShareLink |
-| WorkStory | A single work story | id, user_id, template_type, title, responses (JSONB/markdown), video_url, status | Belongs to User |
-| ShareLink | Private sharing URL | id, user_id, token, is_active, view_count, last_viewed_at | Belongs to User (unique) |
+| User | Candidate account | id, linkedin_id, email, name, headline, bio, profile_photo_url | Has many WorkStories, has many Profiles |
+| WorkStory | A single work story | id, user_id, template_type, title, responses (JSONB/markdown), video_url, status | Belongs to User, belongs to many Profiles |
+| Profile | Curated collection of stories | id, user_id, name, headline, bio, share_token, is_active, expires_at, view_count | Belongs to User, has many WorkStories |
+| ProfileStory | Join table for Profile-Story | id, profile_id, work_story_id, display_order | Belongs to Profile, belongs to WorkStory |
 
 ### Database Schema
 
@@ -162,20 +163,36 @@ create table work_stories (
   updated_at timestamptz default now()
 );
 
--- share_links
-create table share_links (
+-- profiles (curated collections of stories for sharing)
+create table profiles (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) on delete cascade unique not null,
-  token text unique not null,
-  is_active boolean default false,
+  user_id uuid references users(id) on delete cascade not null,
+  name text not null,
+  headline text,  -- optional override of user's headline
+  bio text,       -- optional override of user's bio
+  share_token text unique not null,
+  is_active boolean default true,
+  expires_at timestamptz,  -- optional expiration
   view_count int default 0,
   last_viewed_at timestamptz,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- profile_stories (join table: which stories in which profiles, with ordering)
+create table profile_stories (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid references profiles(id) on delete cascade not null,
+  work_story_id uuid references work_stories(id) on delete cascade not null,
+  display_order int not null default 0,
+  unique(profile_id, work_story_id)
 );
 
 -- indexes
 create index work_stories_user_id_idx on work_stories(user_id);
-create index share_links_token_idx on share_links(token);
+create index profiles_user_id_idx on profiles(user_id);
+create index profiles_share_token_idx on profiles(share_token);
+create index profile_stories_profile_id_idx on profile_stories(profile_id);
 ```
 
 ### Persistence
