@@ -63,7 +63,7 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - [x] Candidate selects which stories to include in each profile
   - [ ] Stories can be reordered within a profile
   - [x] Same story can appear in multiple profiles
-  - [ ] Optional: Override headline/bio per profile
+  - [x] Optional: Override headline/bio per profile
   - [x] Each profile has its own unique, unguessable share URL
   - [x] Candidate can toggle profile link on/off
   - [x] Candidate can regenerate a profile's link (old link stops working)
@@ -146,7 +146,7 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **Acceptance criteria**:
   - [x] At least 3 templates: Project, Role Highlight, Lessons Learned
   - [x] Each template has role-appropriate prompts
-  - [ ] Candidate can switch templates while drafting (with warning about losing content)
+  - ~~Candidate can switch templates while drafting~~ (removed from scope - templates are selected at creation time)
 - **Templates**:
   - **Project**: What problem? What approach? What outcome? What learned?
   - **Role Highlight**: What was the role? What was your impact? What challenges did you overcome?
