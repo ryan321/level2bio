@@ -3,9 +3,15 @@ import { supabase } from '@/lib/supabase'
 import { PROFILES_QUERY_KEY } from './useProfiles'
 import type { ProfileInsert, ProfileUpdate } from '@/types'
 
-// Generate a cryptographically random token
+// URL-safe characters for short tokens (no ambiguous chars like 0/O, 1/l/I)
+const TOKEN_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz'
+const TOKEN_LENGTH = 8
+
+// Generate a short, URL-friendly, cryptographically random token
 function generateToken(): string {
-  return crypto.randomUUID()
+  const array = new Uint8Array(TOKEN_LENGTH)
+  crypto.getRandomValues(array)
+  return Array.from(array, (byte) => TOKEN_CHARS[byte % TOKEN_CHARS.length]).join('')
 }
 
 export interface CreateProfileInput {
