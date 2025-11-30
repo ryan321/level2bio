@@ -80,3 +80,60 @@ CREATE POLICY "Users can view own record"
 3. Test auth flows in private/incognito windows when debugging
 4. Keep schema simple - having `id` match `auth.uid()` eliminates an entire class of sync bugs
 5. Add logging that shows actual query results (not just "starting query...") to identify where things hang
+
+---
+
+## STORY-001: "Story not found" After Creating New Story
+
+**Date:** 2024-11-29
+
+**Severity:** Medium - Feature broken but workaround exists (refresh page)
+
+**Symptoms:**
+- User clicks "Create Your First Story" from dashboard
+- Selects a template (e.g., "Deep Dive Project")
+- Sees "Creating your story..." briefly
+- Then immediately sees "Story not found" error page
+
+**Root Causes:**
+
+1. **Route parameter mismatch:**
+   - Two separate routes exist: `/stories/new` (no param) and `/stories/:id` (with param)
+   - When navigating to `/stories/new`, `useParams()` returns `{ id: undefined }`
+   - Code checked `id === 'new'` which is `false` when `id` is `undefined`
+   - **Fix:** Changed to `const isNew = !id || id === 'new'`
+
+2. **State persistence across navigation:**
+   - After creating story, navigation goes from `/stories/new` to `/stories/{uuid}`
+   - React Router reuses the same `StoryEditorPage` component instance
+   - The `isCreating` state remained `true` from the creation flow
+   - Component showed "Creating your story..." forever instead of the editor
+   - **Fix:** Added `useEffect` to reset `isCreating` when `isNew` becomes false:
+     ```typescript
+     useEffect(() => {
+       if (!isNew) {
+         setIsCreating(false)
+       }
+     }, [isNew])
+     ```
+
+3. **Query cache not populated:**
+   - After story creation, navigating to `/stories/{id}` triggered a fresh query
+   - If RLS or timing issues occurred, query could return empty
+   - **Fix:** Pre-populate React Query cache on successful creation:
+     ```typescript
+     onSuccess: (data) => {
+       queryClient.setQueryData([...STORIES_QUERY_KEY, 'detail', data.id], data)
+     }
+     ```
+
+**Debugging Approach:**
+1. Added console.log statements at key points
+2. Found that `handleSelectTemplate` wasn't being called initially (route issue)
+3. After fixing route, found story was created but UI stuck on loading
+4. Traced to `isCreating` state not resetting after navigation
+
+**Lessons Learned:**
+1. When using separate routes for "new" vs "edit", check for `undefined` params not just string values
+2. React Router may reuse component instances when route patterns match - local state persists
+3. Pre-populating query cache after mutations provides instant UI updates

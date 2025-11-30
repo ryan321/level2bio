@@ -68,12 +68,18 @@ All specs live in `/docs`. Consult before making changes:
 - Project scaffolding (Vite + React + TypeScript)
 - Database schema (users, work_stories, share_links)
 - Supabase client setup with typed queries
-- Authentication system (mock for dev, LinkedIn OAuth for prod)
+- Authentication system (email/password + LinkedIn OAuth via Supabase Auth)
 - Protected routes and auth context
 - Marketing homepage with features grid
+- Work Stories CRUD (create, edit, delete, publish/unpublish)
+- Dashboard with story list
+- Story templates (Project, Role Highlight, Lessons Learned)
+- Auto-save for story editing
+- Accessible dialog components (replaced native alert/confirm)
+- Error boundary for graceful error handling
+- Password strength validation
 
 **Next up:**
-- Work Stories CRUD (create, edit, delete)
-- Dashboard with story list
-- Share links generation
+- Share links generation and management
 - Public profile viewer
+- Video upload for stories

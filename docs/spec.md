@@ -30,13 +30,13 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want to create a structured work story so that I can explain what I did, why it mattered, and what I learned.
 - **Priority**: Must Have
 - **Acceptance criteria**:
-  - [ ] Candidate can create a new work story from their dashboard
-  - [ ] Story includes guided prompts: problem, approach, outcome, learnings
-  - [ ] Candidate can write text responses to each prompt
+  - [x] Candidate can create a new work story from their dashboard
+  - [x] Story includes guided prompts: problem, approach, outcome, learnings
+  - [x] Candidate can write text responses to each prompt
   - [ ] Candidate can optionally upload a video walkthrough
-  - [ ] Candidate can save drafts and return later
-  - [ ] Candidate can edit published stories
-  - [ ] Incomplete stories are not visible to viewers
+  - [x] Candidate can save drafts and return later
+  - [x] Candidate can edit published stories
+  - [x] Incomplete stories are not visible to viewers
 - **User flow**:
   1. Candidate clicks "Create Work Story"
   2. Selects a template (project, role highlight, or lessons learned)
@@ -103,15 +103,16 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - Device blocks autoplay: Show clear "Play video" button
   - Very long stories: Consider pagination or "read more" expansion
 
-#### 4. Authentication (LinkedIn OAuth)
+#### 4. Authentication
 
-- **Description**: Candidates sign up and log in via LinkedIn to quickly create an account with pre-filled professional info
-- **User story**: As a candidate, I want to sign up with LinkedIn so that I can get started quickly without filling out forms.
+- **Description**: Candidates sign up and log in via email/password or LinkedIn OAuth
+- **User story**: As a candidate, I want to sign up quickly so that I can get started creating my profile.
 - **Priority**: Must Have
 - **Acceptance criteria**:
+  - [x] Candidate can sign up with email/password
   - [x] Candidate can sign up with LinkedIn OAuth
-  - [x] Basic info (name, headline, profile photo) pre-filled from LinkedIn
-  - [ ] Candidate can add a backup email for account recovery
+  - [x] Basic info (name, headline, profile photo) pre-filled from LinkedIn (when using OAuth)
+  - [x] Password strength validation (12+ chars, mixed case, numbers)
   - [x] Session persists across browser restarts
   - [x] Candidate can log out
 - **User flow**:
@@ -134,8 +135,8 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want template options so that I can choose the right format for my story.
 - **Priority**: Should Have
 - **Acceptance criteria**:
-  - [ ] At least 3 templates: Project, Role Highlight, Lessons Learned
-  - [ ] Each template has role-appropriate prompts
+  - [x] At least 3 templates: Project, Role Highlight, Lessons Learned
+  - [x] Each template has role-appropriate prompts
   - [ ] Candidate can switch templates while drafting (with warning about losing content)
 - **Templates**:
   - **Project**: What problem? What approach? What outcome? What learned?
