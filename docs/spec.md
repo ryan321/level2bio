@@ -32,9 +32,10 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **Acceptance criteria**:
   - [x] Candidate can create a new work story from their dashboard
   - [x] Story includes guided prompts: problem, approach, outcome, learnings
-  - [x] Candidate can write text responses to each prompt
-  - [ ] Candidate can optionally upload a video walkthrough
-  - [x] Candidate can save drafts and return later
+  - [x] Candidate can write text responses to each prompt (with markdown formatting)
+  - [x] Candidate can embed YouTube videos inline using `[YouTube](url)` syntax
+  - [x] Candidate can upload images, videos, and PDFs (drag-drop, paste, or attach)
+  - [x] Candidate can save drafts and return later (auto-save enabled)
   - [x] Candidate can edit stories
   - [x] All stories can be added to profiles for sharing
 - **User flow**:

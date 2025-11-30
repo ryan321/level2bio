@@ -83,12 +83,20 @@ All specs live in `/docs`. Consult before making changes:
 - **Profile expiration** (optional date/time, expired badge)
 - **Public profile viewer** (clean design, avatar fallback, intro text)
 - **View count analytics** (atomic increment, view count display)
-- **Security hardening** (RLS policies, atomic view counting)
-- **Performance optimization** (React.memo, database indexes)
+- **Security hardening** (RLS policies, atomic view counting, CSP headers)
+- **Performance optimization** (React.memo, database indexes, code splitting)
 - **Code quality** (shared utilities for dates, YouTube, validation)
 - **Component splitting** (ProfileManager split into smaller files)
+- **Markdown rendering** (react-markdown with Tailwind Typography)
+- **Asset uploads** (images, videos, PDFs via Supabase Storage)
+- **Inline file uploads** (drag-drop, paste, attach button in editor)
+- **YouTube embeds** (inline video embedding with `[YouTube](url)` syntax)
+- **Editor preview pane** (side-by-side on desktop, stacked on mobile)
+- **Toast notifications** (user-friendly error messages)
+- **Formatting help popup** (markdown syntax, YouTube embeds, file uploads)
+- **Security improvements** (file magic number validation, URL protocol validation, videoId validation)
+- **Accessibility** (ARIA labels, proper form associations, keyboard navigation)
 
 **Next up:**
-- Video upload for stories
 - Story reordering within profiles
 - Profile headline/bio overrides

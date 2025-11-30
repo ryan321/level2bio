@@ -53,7 +53,7 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 
 ### Stories Feature
 - **Purpose**: Create, edit, and manage work stories
-- **Contains**: Story editor, story list, template selector, video upload
+- **Contains**: Story editor, story list, template selector, markdown editor, asset uploader
 - **Depends on**: Auth, Supabase Database/Storage, shared components
 - **Used by**: Dashboard
 
@@ -71,7 +71,7 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 
 ### Shared Layer
 - **Purpose**: Reusable code across features
-- **Contains**: UI components, hooks, utilities, types, Supabase client
+- **Contains**: UI components (RichMarkdown, Toast, Dialog, ErrorBoundary), hooks, utilities, types, Supabase client
 - **Depends on**: External libraries only
 - **Used by**: All features
 
@@ -157,11 +157,15 @@ create table work_stories (
   template_type text not null check (template_type in ('project', 'role_highlight', 'lessons_learned')),
   title text not null,
   responses jsonb not null default '{}',
+  assets jsonb not null default '[]',  -- uploaded files (images, videos, PDFs)
   video_url text,
   display_order int not null default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Storage bucket for story assets
+-- story-assets bucket with RLS policies for user folder access
 
 -- profiles (curated collections of stories for sharing)
 create table profiles (
@@ -283,14 +287,16 @@ level2bio/
 │   │   │
 │   │   ├── stories/
 │   │   │   ├── components/
-│   │   │   │   ├── StoryEditor.tsx
+│   │   │   │   ├── StoryEditor.tsx     # Main editor with auto-save
 │   │   │   │   ├── StoryList.tsx
 │   │   │   │   ├── StoryCard.tsx
 │   │   │   │   ├── TemplateSelector.tsx
-│   │   │   │   └── VideoUpload.tsx
+│   │   │   │   ├── MarkdownEditor.tsx  # Rich text editor with uploads
+│   │   │   │   └── AssetUploader.tsx
 │   │   │   ├── hooks/
 │   │   │   │   ├── useStories.ts
-│   │   │   │   └── useStoryMutations.ts
+│   │   │   │   ├── useStoryMutations.ts
+│   │   │   │   └── useAssetUpload.ts   # File upload with validation
 │   │   │   └── templates.ts            # Template definitions
 │   │   │
 │   │   ├── profile/
@@ -313,6 +319,10 @@ level2bio/
 │   │           └── usePublicProfile.ts
 │   │
 │   ├── components/                     # Shared UI components
+│   │   ├── RichMarkdown.tsx            # Memoized markdown with YouTube embeds
+│   │   ├── Toast.tsx                   # Toast notification system
+│   │   ├── Dialog.tsx                  # Accessible modal dialogs
+│   │   ├── ErrorBoundary.tsx           # React error boundary
 │   │   └── ui/                         # shadcn/ui components
 │   │       ├── button.tsx
 │   │       ├── card.tsx
@@ -378,7 +388,9 @@ level2bio/
 | @supabase/supabase-js | Supabase client | |
 | tailwindcss | Styling | |
 | @radix-ui/* | Accessible primitives (via shadcn/ui) | |
-| react-markdown | Render markdown content | |
+| react-markdown | Render markdown content | With custom components for YouTube embeds |
+| fast-deep-equal | Deep equality comparison | For efficient change detection |
+| @tailwindcss/typography | Prose styling for markdown | |
 | clsx + tailwind-merge | Class name utilities | |
 | vite | Build tool | |
 | typescript | Type safety | |
@@ -392,10 +404,18 @@ level2bio/
 - **Authorization**: Row Level Security (RLS) policies in Supabase
   - Users can only read/write their own data
   - Public profiles readable via share token (no auth)
+  - Storage RLS enforces folder-based permissions (users can only access their own files)
 - **Data protection**:
   - OAuth tokens managed by Supabase (not stored in app)
   - Share tokens are UUID v4 (unguessable)
   - HTTPS only
+  - Content Security Policy (CSP) headers restrict iframe sources to YouTube only
+  - X-Frame-Options, X-Content-Type-Options, Referrer-Policy headers
+- **Input validation**:
+  - File upload magic number validation (validates actual file content)
+  - URL protocol validation (blocks javascript:, data: in links)
+  - YouTube videoId validation (11-char alphanumeric only)
+  - Password strength requirements (12+ chars, mixed case, numbers)
 - **Privacy**:
   - Revoked links return neutral message (no info leak)
   - No tracking beyond simple view count
@@ -403,7 +423,13 @@ level2bio/
 ## Performance Considerations
 
 - **Initial load**: Code-split by route (React lazy loading)
-- **Videos**: Stream from Supabase Storage, don't load until played
-- **Images**: Use appropriate sizes, lazy load below fold
-- **Queries**: React Query caching prevents redundant fetches
+- **Bundle optimization**: react-markdown and other large dependencies in separate chunks
+- **Videos**: Stream from Supabase Storage, don't load until played; YouTube embeds via iframe
+- **Images**: Lazy loading with `loading="lazy"` attribute
+- **Queries**: React Query caching prevents redundant fetches; optimized column selection
+- **React rendering**:
+  - Memoized components (React.memo) for expensive renders
+  - useMemo for expensive computations (change detection)
+  - useCallback for stable function references
+  - fast-deep-equal instead of JSON.stringify for comparisons
 - **No premature optimization**: Measure first if issues arise
