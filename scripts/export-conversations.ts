@@ -374,53 +374,56 @@ function conversationToMarkdown(conv: Conversation): string {
   return lines.join('\n')
 }
 
-function conversationToChatMarkdown(conv: Conversation): string {
+function extractUserPrompts(conversations: Conversation[]): string {
   const lines: string[] = []
 
-  // Header
-  lines.push(`# Chat: ${conv.slug}`)
+  lines.push(`# User Prompts`)
   lines.push('')
-  lines.push(`**Started:** ${conv.startTime.toISOString()}`)
-  lines.push(`**Ended:** ${conv.endTime.toISOString()}`)
-  lines.push(`**Duration:** ${Math.round((conv.endTime.getTime() - conv.startTime.getTime()) / 1000 / 60)} minutes`)
+  lines.push(`All prompts typed by the user during Claude Code sessions.`)
+  lines.push('')
+  lines.push(`Generated: ${new Date().toISOString()}`)
   lines.push('')
   lines.push('---')
   lines.push('')
 
-  for (const entry of conv.entries) {
-    const timestamp = new Date(entry.timestamp)
-    const timeStr = timestamp.toLocaleTimeString()
-    const content = entry.message?.content
+  for (const conv of conversations) {
+    let hasUserMessages = false
 
-    // Handle user messages
-    if (isUserTextMessage(entry)) {
-      const rawContent = typeof content === 'string' ? content :
-        (Array.isArray(content) ? content.map(b => b.text || '').join('') : '')
+    for (const entry of conv.entries) {
+      const content = entry.message?.content
 
-      // Skip context continuation summaries
-      if (rawContent.includes('This session is being continued from a previous conversation')) {
-        continue
+      if (isUserTextMessage(entry)) {
+        const rawContent = typeof content === 'string' ? content :
+          (Array.isArray(content) ? content.map(b => b.text || '').join('') : '')
+
+        // Skip context continuation summaries
+        if (rawContent.includes('This session is being continued from a previous conversation')) {
+          continue
+        }
+
+        const userText = formatUserContent(content)
+        if (userText.trim()) {
+          if (!hasUserMessages) {
+            // Add conversation header on first user message
+            lines.push(`## ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()}`)
+            lines.push('')
+            hasUserMessages = true
+          }
+
+          const timestamp = new Date(entry.timestamp)
+          const timeStr = timestamp.toLocaleTimeString()
+
+          lines.push(`**${timeStr}**`)
+          lines.push('')
+          lines.push(`> ${userText.split('\n').join('\n> ')}`)
+          lines.push('')
+        }
       }
-
-      const userText = formatUserContent(content)
-      if (userText.trim()) {
-        lines.push(`**👤 User** *${timeStr}*`)
-        lines.push('')
-        lines.push(userText)
-        lines.push('')
-      }
-      continue
     }
 
-    // Handle assistant messages - only text, no tools
-    if (entry.type === 'assistant' && content) {
-      const assistantText = formatAssistantText(content)
-      if (assistantText.trim()) {
-        lines.push(`**🤖 Assistant** *${timeStr}*`)
-        lines.push('')
-        lines.push(assistantText)
-        lines.push('')
-      }
+    if (hasUserMessages) {
+      lines.push('---')
+      lines.push('')
     }
   }
 
@@ -459,12 +462,15 @@ function main() {
 
   // Create detailed output directory
   const detailedDir = path.join(outputDir, 'detailed')
-  const chatDir = path.join(outputDir, 'chat')
   fs.mkdirSync(detailedDir, { recursive: true })
-  fs.mkdirSync(chatDir, { recursive: true })
+
+  // Always write the user prompts file
+  const userPromptsMarkdown = extractUserPrompts(conversations)
+  fs.writeFileSync(path.join(outputDir, 'user-prompts.md'), userPromptsMarkdown)
+  console.log(`Written: ${outputDir}/user-prompts.md`)
 
   if (singleFile) {
-    // Output as single files
+    // Output as single file
     const allDetailed: string[] = []
     allDetailed.push('# Claude Code Conversations (Detailed)')
     allDetailed.push('')
@@ -475,46 +481,24 @@ function main() {
     allDetailed.push('## Table of Contents')
     allDetailed.push('')
 
-    const allChat: string[] = []
-    allChat.push('# Claude Code Conversations (Chat)')
-    allChat.push('')
-    allChat.push(`Generated: ${new Date().toISOString()}`)
-    allChat.push('')
-    allChat.push('This version shows only user prompts and assistant responses.')
-    allChat.push('')
-    allChat.push('## Table of Contents')
-    allChat.push('')
-
     for (let i = 0; i < conversations.length; i++) {
       const conv = conversations[i]
       allDetailed.push(`${i + 1}. [${conv.slug}](#conversation-${conv.agentId})`)
-      allChat.push(`${i + 1}. [${conv.slug}](#chat-${conv.agentId})`)
     }
 
     allDetailed.push('')
     allDetailed.push('---')
     allDetailed.push('')
 
-    allChat.push('')
-    allChat.push('---')
-    allChat.push('')
-
     for (const conv of conversations) {
       allDetailed.push(conversationToMarkdown(conv))
       allDetailed.push('')
       allDetailed.push('---')
       allDetailed.push('')
-
-      allChat.push(conversationToChatMarkdown(conv))
-      allChat.push('')
-      allChat.push('---')
-      allChat.push('')
     }
 
     fs.writeFileSync(path.join(outputDir, 'all-detailed.md'), allDetailed.join('\n'))
-    fs.writeFileSync(path.join(outputDir, 'all-chat.md'), allChat.join('\n'))
     console.log(`Written: ${outputDir}/all-detailed.md`)
-    console.log(`Written: ${outputDir}/all-chat.md`)
   } else {
     // Output as separate files
     const detailedIndex: string[] = []
@@ -527,35 +511,19 @@ function main() {
     detailedIndex.push('| # | Conversation | Started | Duration | Messages |')
     detailedIndex.push('|---|--------------|---------|----------|----------|')
 
-    const chatIndex: string[] = []
-    chatIndex.push('# Claude Code Conversations (Chat)')
-    chatIndex.push('')
-    chatIndex.push(`Generated: ${new Date().toISOString()}`)
-    chatIndex.push('')
-    chatIndex.push('This version shows only user prompts and assistant responses.')
-    chatIndex.push('')
-    chatIndex.push('| # | Conversation | Started | Duration |')
-    chatIndex.push('|---|--------------|---------|----------|')
-
     for (let i = 0; i < conversations.length; i++) {
       const conv = conversations[i]
       const filename = `${String(i + 1).padStart(3, '0')}-${conv.agentId}.md`
       const duration = Math.round((conv.endTime.getTime() - conv.startTime.getTime()) / 1000 / 60)
 
       detailedIndex.push(`| ${i + 1} | [${conv.slug}](./${filename}) | ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()} | ${duration} min | ${conv.entries.length} |`)
-      chatIndex.push(`| ${i + 1} | [${conv.slug}](./${filename}) | ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()} | ${duration} min |`)
 
       // Write detailed version
       const detailedMarkdown = conversationToMarkdown(conv)
       fs.writeFileSync(path.join(detailedDir, filename), detailedMarkdown)
-
-      // Write chat version
-      const chatMarkdown = conversationToChatMarkdown(conv)
-      fs.writeFileSync(path.join(chatDir, filename), chatMarkdown)
     }
 
     fs.writeFileSync(path.join(detailedDir, 'README.md'), detailedIndex.join('\n'))
-    fs.writeFileSync(path.join(chatDir, 'README.md'), chatIndex.join('\n'))
 
     // Write main index
     const mainIndex: string[] = []
@@ -563,15 +531,14 @@ function main() {
     mainIndex.push('')
     mainIndex.push(`Generated: ${new Date().toISOString()}`)
     mainIndex.push('')
-    mainIndex.push('## Versions')
+    mainIndex.push('## Contents')
     mainIndex.push('')
-    mainIndex.push('- **[Detailed](./detailed/)** - Full conversations with all tool calls and outputs')
-    mainIndex.push('- **[Chat](./chat/)** - Just user prompts and assistant responses')
+    mainIndex.push('- **[User Prompts](./user-prompts.md)** - All user-typed messages in one document')
+    mainIndex.push('- **[Detailed Conversations](./detailed/)** - Full conversations with all tool calls and outputs')
     mainIndex.push('')
     fs.writeFileSync(path.join(outputDir, 'README.md'), mainIndex.join('\n'))
 
     console.log(`Written ${conversations.length} detailed files to ${detailedDir}`)
-    console.log(`Written ${conversations.length} chat files to ${chatDir}`)
     console.log(`Index: ${outputDir}/README.md`)
   }
 }
