@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
-import Markdown from 'react-markdown'
+import { RichMarkdown } from '@/components/RichMarkdown'
 import { useAssetUpload } from '../hooks/useAssetUpload'
 import type { StoryAsset } from '@/types'
 
@@ -174,7 +174,7 @@ export function MarkdownEditor({
             <div className="border rounded-lg p-4 bg-gray-50 min-h-[120px] max-h-[400px] overflow-y-auto">
               {value ? (
                 <div className="prose prose-sm max-w-none">
-                  <Markdown>{value}</Markdown>
+                  <RichMarkdown>{value}</RichMarkdown>
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm italic">Preview will appear here...</p>
@@ -208,6 +208,9 @@ export function MarkdownEditor({
           </button>
           <span className="text-xs text-gray-400 hidden sm:inline">
             paste/drop
+          </span>
+          <span className="text-xs text-gray-400 hidden sm:inline" title="Use [YouTube](url) to embed videos">
+            <code className="bg-gray-100 px-1 rounded">[YouTube](url)</code> to embed
           </span>
           <span className="text-gray-300">|</span>
           <button

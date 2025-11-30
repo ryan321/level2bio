@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
-import Markdown from 'react-markdown'
 import { usePublicProfile } from '@/features/profile'
 import { templates, type TemplateType } from '@/features/stories'
+import { RichMarkdown } from '@/components/RichMarkdown'
 import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import type { WorkStory, StoryAsset } from '@/types'
 
@@ -124,7 +124,7 @@ function StoryViewer({ story }: { story: WorkStory }) {
                 {prompt.label}
               </h3>
               <div className="text-gray-600 prose prose-sm max-w-none">
-                <Markdown>{response}</Markdown>
+                <RichMarkdown>{response}</RichMarkdown>
               </div>
             </div>
           )
