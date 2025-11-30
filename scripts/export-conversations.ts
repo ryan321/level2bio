@@ -296,6 +296,20 @@ function conversationToMarkdown(conv: Conversation): string {
 
     // Handle user messages - make them prominent
     if (isUserTextMessage(entry)) {
+      const rawContent = typeof content === 'string' ? content :
+        (Array.isArray(content) ? content.map(b => b.text || '').join('') : '')
+
+      // Check if this is a context continuation summary
+      if (rawContent.includes('This session is being continued from a previous conversation')) {
+        lines.push(`---`)
+        lines.push('')
+        lines.push(`*📝 Context was compacted at ${timeStr} - conversation continued from summary*`)
+        lines.push('')
+        lines.push(`---`)
+        lines.push('')
+        continue
+      }
+
       const userText = formatUserContent(content)
       if (userText.trim()) {
         lines.push(`---`)
