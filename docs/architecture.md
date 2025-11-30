@@ -139,6 +139,7 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 -- users
 create table users (
   id uuid primary key default gen_random_uuid(),
+  auth_id uuid unique,  -- links to Supabase auth.users
   linkedin_id text unique not null,
   email text unique,
   name text not null,
@@ -149,7 +150,7 @@ create table users (
   updated_at timestamptz default now()
 );
 
--- work_stories
+-- work_stories (no status column - all stories can be added to profiles)
 create table work_stories (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references users(id) on delete cascade not null,
@@ -157,7 +158,6 @@ create table work_stories (
   title text not null,
   responses jsonb not null default '{}',
   video_url text,
-  status text not null default 'draft' check (status in ('draft', 'published')),
   display_order int not null default 0,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -188,11 +188,28 @@ create table profile_stories (
   unique(profile_id, work_story_id)
 );
 
+-- RPC function for atomic view count increment
+create function increment_profile_view(p_share_token text)
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  update profiles
+  set view_count = view_count + 1, last_viewed_at = now()
+  where share_token = p_share_token
+    and is_active = true
+    and (expires_at is null or expires_at > now());
+end;
+$$;
+
 -- indexes
 create index work_stories_user_id_idx on work_stories(user_id);
+create index work_stories_user_id_display_order_idx on work_stories(user_id, display_order);
 create index profiles_user_id_idx on profiles(user_id);
 create index profiles_share_token_idx on profiles(share_token);
 create index profile_stories_profile_id_idx on profile_stories(profile_id);
+create index profile_stories_display_order_idx on profile_stories(profile_id, display_order);
 ```
 
 ### Persistence
@@ -278,12 +295,14 @@ level2bio/
 │   │   │
 │   │   ├── profile/
 │   │   │   ├── components/
-│   │   │   │   ├── ProfileEditor.tsx
-│   │   │   │   ├── ShareLinkManager.tsx
-│   │   │   │   └── AnalyticsCard.tsx
+│   │   │   │   ├── ProfileManager.tsx      # Main orchestrator
+│   │   │   │   ├── ProfileCard.tsx         # Individual profile display
+│   │   │   │   ├── CreateProfileForm.tsx   # Profile creation form
+│   │   │   │   └── ShareLinkManager.tsx
 │   │   │   └── hooks/
-│   │   │       ├── useProfile.ts
-│   │   │       └── useShareLink.ts
+│   │   │       ├── useProfiles.ts
+│   │   │       ├── useProfileMutations.ts
+│   │   │       └── usePublicProfile.ts
 │   │   │
 │   │   └── public-view/
 │   │       ├── components/
@@ -306,7 +325,10 @@ level2bio/
 │   ├── lib/                            # Shared utilities
 │   │   ├── supabase.ts                 # Supabase client
 │   │   ├── utils.ts                    # General utilities
-│   │   └── constants.ts
+│   │   ├── constants.ts
+│   │   ├── dateUtils.ts                # Date formatting utilities
+│   │   ├── youtube.ts                  # YouTube URL parsing
+│   │   └── validation.ts               # Input validation utilities
 │   │
 │   ├── types/                          # TypeScript types
 │   │   ├── database.ts                 # Generated from Supabase

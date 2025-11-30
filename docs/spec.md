@@ -35,8 +35,8 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - [x] Candidate can write text responses to each prompt
   - [ ] Candidate can optionally upload a video walkthrough
   - [x] Candidate can save drafts and return later
-  - [x] Candidate can edit published stories
-  - [x] Incomplete stories are not visible to viewers
+  - [x] Candidate can edit stories
+  - [x] All stories can be added to profiles for sharing
 - **User flow**:
   1. Candidate clicks "Create Work Story"
   2. Selects a template (project, role highlight, or lessons learned)
@@ -57,17 +57,17 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want to create multiple curated profiles so that I can tailor what I show to different audiences.
 - **Priority**: Must Have
 - **Acceptance criteria**:
-  - [ ] Candidate can create multiple profiles
-  - [ ] Each profile has a name (e.g., "Backend Focus", "Startup Role")
-  - [ ] Candidate selects which published stories to include in each profile
+  - [x] Candidate can create multiple profiles
+  - [x] Each profile has a name (e.g., "Backend Focus", "Startup Role")
+  - [x] Candidate selects which stories to include in each profile
   - [ ] Stories can be reordered within a profile
-  - [ ] Same story can appear in multiple profiles
+  - [x] Same story can appear in multiple profiles
   - [ ] Optional: Override headline/bio per profile
-  - [ ] Each profile has its own unique, unguessable share URL
-  - [ ] Candidate can toggle profile link on/off
-  - [ ] Candidate can regenerate a profile's link (old link stops working)
-  - [ ] Optional expiration date on profile links
-  - [ ] Dashboard shows all profiles with their links and view counts
+  - [x] Each profile has its own unique, unguessable share URL
+  - [x] Candidate can toggle profile link on/off
+  - [x] Candidate can regenerate a profile's link (old link stops working)
+  - [x] Optional expiration date on profile links
+  - [x] Dashboard shows all profiles with their links and view counts
 - **User flow**:
   1. Candidate creates work stories
   2. Clicks "Create Profile"
@@ -89,14 +89,14 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a hiring manager, I want to quickly view a candidate's work stories so that I can understand their communication and reasoning before an interview.
 - **Priority**: Must Have
 - **Acceptance criteria**:
-  - [ ] Page loads quickly (< 2 seconds on reasonable connection)
-  - [ ] Clean, professional design that feels premium
-  - [ ] Shows candidate's basic info and headline at top
-  - [ ] Lists all published work stories
-  - [ ] Each story is skimmable (text) with optional video
-  - [ ] Video plays on click (no autoplay)
-  - [ ] Works on mobile and desktop
-  - [ ] No login required
+  - [x] Page loads quickly (< 2 seconds on reasonable connection)
+  - [x] Clean, professional design that feels premium
+  - [x] Shows candidate's basic info and headline at top
+  - [x] Lists all work stories in the profile
+  - [x] Each story is skimmable (text) with optional video
+  - [x] Video plays on click (no autoplay)
+  - [x] Works on mobile and desktop
+  - [x] No login required
 - **User flow**:
   1. Hiring manager receives link in email or application
   2. Clicks link, page loads immediately
@@ -157,10 +157,10 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want a profile header so that viewers know who I am at a glance.
 - **Priority**: Should Have
 - **Acceptance criteria**:
-  - [ ] Shows name (from LinkedIn or editable)
-  - [ ] Shows headline (from LinkedIn or editable)
-  - [ ] Optional short bio (2-3 sentences)
-  - [ ] Optional profile photo (from LinkedIn or uploadable)
+  - [x] Shows name (from LinkedIn or editable)
+  - [x] Shows headline (from LinkedIn or editable)
+  - [x] Optional short bio (2-3 sentences)
+  - [x] Optional profile photo (from LinkedIn or uploadable)
 
 ### Nice to Have (Could Have)
 
@@ -170,9 +170,9 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
 - **User story**: As a candidate, I want to know if my link was viewed so that I can follow up appropriately.
 - **Priority**: Could Have
 - **Acceptance criteria**:
-  - [ ] Show total view count on dashboard
-  - [ ] Optionally show "last viewed" timestamp
-  - [ ] No invasive tracking (no identity, no session data)
+  - [x] Show total view count on dashboard
+  - [x] Optionally show "last viewed" timestamp
+  - [x] No invasive tracking (no identity, no session data)
 
 #### 8. GitHub Authentication (for Repo Verification)
 

@@ -66,20 +66,29 @@ All specs live in `/docs`. Consult before making changes:
 
 **Completed:**
 - Project scaffolding (Vite + React + TypeScript)
-- Database schema (users, work_stories, share_links)
+- Database schema (users, work_stories, profiles, profile_stories)
 - Supabase client setup with typed queries
 - Authentication system (email/password + LinkedIn OAuth via Supabase Auth)
 - Protected routes and auth context
 - Marketing homepage with features grid
-- Work Stories CRUD (create, edit, delete, publish/unpublish)
-- Dashboard with story list
+- Work Stories CRUD (create, edit, delete)
+- Dashboard with story list and profile management
 - Story templates (Project, Role Highlight, Lessons Learned)
 - Auto-save for story editing
 - Accessible dialog components (replaced native alert/confirm)
 - Error boundary for graceful error handling
 - Password strength validation
+- **Curated Profiles** (create, edit, delete, toggle active/inactive)
+- **Profile share links** (unique tokens, regeneration, copy to clipboard)
+- **Profile expiration** (optional date/time, expired badge)
+- **Public profile viewer** (clean design, avatar fallback, intro text)
+- **View count analytics** (atomic increment, view count display)
+- **Security hardening** (RLS policies, atomic view counting)
+- **Performance optimization** (React.memo, database indexes)
+- **Code quality** (shared utilities for dates, YouTube, validation)
+- **Component splitting** (ProfileManager split into smaller files)
 
 **Next up:**
-- Share links generation and management
-- Public profile viewer
 - Video upload for stories
+- Story reordering within profiles
+- Profile headline/bio overrides
