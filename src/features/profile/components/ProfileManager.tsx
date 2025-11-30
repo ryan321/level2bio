@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useProfiles, type ProfileWithStories } from '../hooks/useProfiles'
 import {
   useCreateProfile,
+  useUpdateProfile,
   useToggleProfile,
   useRegenerateProfileToken,
   useDeleteProfile,
@@ -123,6 +124,7 @@ function CreateProfileForm({
   const [selectedStoryIds, setSelectedStoryIds] = useState<string[]>(
     stories.map((s) => s.id)
   )
+  const [expiresAt, setExpiresAt] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -142,6 +144,7 @@ function CreateProfileForm({
         userId,
         name: name.trim(),
         storyIds: selectedStoryIds,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
       })
       onSuccess()
     } catch (err) {
@@ -196,6 +199,23 @@ function CreateProfileForm({
         </div>
       </div>
 
+      <div className="mb-4">
+        <label htmlFor="profile-expires" className="block text-sm font-medium text-gray-700 mb-1">
+          Link Expiration (Optional)
+        </label>
+        <input
+          id="profile-expires"
+          type="datetime-local"
+          value={expiresAt}
+          onChange={(e) => setExpiresAt(e.target.value)}
+          min={new Date().toISOString().slice(0, 16)}
+          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Leave empty for no expiration
+        </p>
+      </div>
+
       <div className="flex justify-end gap-2">
         <button
           type="button"
@@ -233,6 +253,16 @@ interface ProfileCardProps {
   }) => void
 }
 
+// Helper to format datetime-local input value
+function toDateTimeLocal(isoString: string | null): string {
+  if (!isoString) return ''
+  const date = new Date(isoString)
+  // Adjust for timezone offset to get local time
+  const offset = date.getTimezoneOffset() * 60000
+  const localDate = new Date(date.getTime() - offset)
+  return localDate.toISOString().slice(0, 16)
+}
+
 function ProfileCard({
   profile,
   userId,
@@ -244,6 +274,7 @@ function ProfileCard({
   showConfirm,
 }: ProfileCardProps) {
   const toggleProfile = useToggleProfile()
+  const updateProfile = useUpdateProfile()
   const regenerateToken = useRegenerateProfileToken()
   const deleteProfile = useDeleteProfile()
   const updateStories = useUpdateProfileStories()
@@ -252,6 +283,8 @@ function ProfileCard({
   const [selectedStoryIds, setSelectedStoryIds] = useState<string[]>(
     profile.stories.map((s) => s.id)
   )
+  const [editingExpiration, setEditingExpiration] = useState(false)
+  const [expiresAt, setExpiresAt] = useState(toDateTimeLocal(profile.expires_at))
 
   const shareUrl = `${window.location.origin}/p/${profile.share_token}`
 
@@ -337,7 +370,45 @@ function ProfileCard({
     )
   }
 
+  const handleSaveExpiration = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        profileId: profile.id,
+        userId,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+      })
+      setEditingExpiration(false)
+    } catch (err) {
+      console.error('Failed to update expiration:', err)
+      showAlert('Failed to update expiration. Please try again.', 'Error')
+    }
+  }
+
+  const handleClearExpiration = async () => {
+    try {
+      await updateProfile.mutateAsync({
+        profileId: profile.id,
+        userId,
+        expiresAt: null,
+      })
+      setExpiresAt('')
+      setEditingExpiration(false)
+    } catch (err) {
+      console.error('Failed to clear expiration:', err)
+      showAlert('Failed to clear expiration. Please try again.', 'Error')
+    }
+  }
+
   const isExpired = profile.expires_at && new Date(profile.expires_at) < new Date()
+
+  // Format expiration for display
+  const formatExpiration = (isoString: string) => {
+    const date = new Date(isoString)
+    return date.toLocaleString(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+  }
 
   return (
     <div className="border rounded-lg p-4">
@@ -393,6 +464,59 @@ function ProfileCard({
         </div>
       )}
 
+      {/* Expiration info/edit */}
+      {editingExpiration ? (
+        <div className="border-t pt-3 mt-3 mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Link Expiration
+          </label>
+          <input
+            type="datetime-local"
+            value={expiresAt}
+            onChange={(e) => setExpiresAt(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-2"
+          />
+          <div className="flex justify-end gap-2">
+            {profile.expires_at && (
+              <button
+                onClick={handleClearExpiration}
+                disabled={updateProfile.isPending}
+                className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700"
+              >
+                Remove expiration
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setExpiresAt(toDateTimeLocal(profile.expires_at))
+                setEditingExpiration(false)
+              }}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveExpiration}
+              disabled={updateProfile.isPending}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {updateProfile.isPending ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </div>
+      ) : profile.expires_at && !isExpired ? (
+        <div className="text-sm text-gray-500 mb-3">
+          Expires: {formatExpiration(profile.expires_at)}
+          <button
+            onClick={() => setEditingExpiration(true)}
+            className="ml-2 text-blue-600 hover:text-blue-700"
+          >
+            Edit
+          </button>
+        </div>
+      ) : null}
+
       {/* Edit stories section */}
       {isEditing ? (
         <div className="border-t pt-3 mt-3">
@@ -432,13 +556,21 @@ function ProfileCard({
           </div>
         </div>
       ) : (
-        <div className="flex items-center gap-3 text-sm">
+        <div className="flex items-center gap-3 text-sm flex-wrap">
           <button
             onClick={onEdit}
             className="text-gray-500 hover:text-gray-700"
           >
             Edit stories
           </button>
+          {!profile.expires_at && (
+            <button
+              onClick={() => setEditingExpiration(true)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Set expiration
+            </button>
+          )}
           <button
             onClick={handleRegenerate}
             disabled={regenerateToken.isPending}
