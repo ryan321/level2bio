@@ -115,16 +115,16 @@
 - Supabase free tier is sufficient for initial launch
 - Video file sizes will be manageable with Supabase Storage limits
 - Users have modern browsers (no IE11 support needed)
-- Users are comfortable with LinkedIn as the primary identity provider
+- Users prefer LinkedIn OAuth but email/password provides a fallback
 
 ## Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| LinkedIn API changes or deprecation | Low | High | Add backup email auth in v1.1 |
+| LinkedIn API changes or deprecation | Low | Medium | Email/password auth already available as backup |
 | Video storage costs exceed budget | Medium | Medium | Implement file size limits, consider compression |
 | Supabase outage | Low | High | Accept risk for v1; consider redundancy later |
-| Share links get guessed/brute-forced | Very Low | High | Use long, cryptographically random tokens |
+| Share links get guessed/brute-forced | Very Low | High | Use 8-char alphanumeric tokens (~83 trillion combinations) |
 | GDPR compliance missed | Low | High | Implement deletion flow before launch |
 
 ## Code Quality Standards

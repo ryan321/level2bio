@@ -46,8 +46,8 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 ## Features
 
 ### Auth Feature
-- **Purpose**: Handle user authentication (LinkedIn OAuth, session management)
-- **Contains**: Login page, auth hooks, auth context, mock auth service
+- **Purpose**: Handle user authentication (email/password + LinkedIn OAuth, session management)
+- **Contains**: AuthForm (combined login/signup), auth hooks, auth context, mock auth service
 - **Depends on**: Supabase Auth, shared lib
 - **Used by**: All protected routes
 
@@ -71,7 +71,7 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
 
 ### Shared Layer
 - **Purpose**: Reusable code across features
-- **Contains**: UI components (RichMarkdown, Toast, Dialog, ErrorBoundary), hooks, utilities, types, Supabase client
+- **Contains**: UI components (RichMarkdown, Toast, Dialog, ErrorBoundary), hooks (useDialog), utilities (logger, validation, dates, youtube), types, Supabase client
 - **Depends on**: External libraries only
 - **Used by**: All features
 
@@ -95,14 +95,14 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
   - Single freeform field: Rejected—loses guided template structure
 - **Consequences**: Simple to implement, render, and migrate later if needed
 
-### Mock auth for development
+### Dual auth (email/password + LinkedIn OAuth)
 - **Status**: Accepted
-- **Context**: LinkedIn OAuth has no test accounts; need to develop and test without real OAuth
-- **Decision**: Create auth abstraction with mock implementation toggled by environment variable
+- **Context**: LinkedIn OAuth is convenient but users should have alternatives; need dev/test without OAuth
+- **Decision**: Support both email/password and LinkedIn OAuth in production; mock auth for dev/test
 - **Alternatives considered**:
-  - Always use real OAuth: Rejected—painful for dev, impossible for CI
-  - Email/password for dev only: Rejected—different code paths
-- **Consequences**: Can develop offline; automated tests are simple; same code path in dev and prod
+  - LinkedIn-only: Rejected—blocks users without LinkedIn
+  - Email-only: Rejected—misses convenience of OAuth
+- **Consequences**: Users choose preferred auth method; dev/test can use mock; accounts merge by email
 
 ### Tailwind + shadcn/ui
 - **Status**: Accepted
@@ -121,6 +121,24 @@ Level2.bio is a React single-page application backed by Supabase (PostgreSQL, Au
   - Redux: Rejected—too much boilerplate for this scale
   - Zustand: Considered—would use if context gets unwieldy
 - **Consequences**: Less code, simpler mental model, easy to understand
+
+### Short URLs for resume-friendliness
+- **Status**: Accepted
+- **Context**: Share URLs will be included in resumes, so they need to be short and readable
+- **Decision**: Use 8-character alphanumeric tokens (55^8 ≈ 83 trillion combinations) instead of UUIDs
+- **Alternatives considered**:
+  - UUID: Rejected—36 chars is too long for resumes
+  - Base62: Considered—chose subset without ambiguous chars (0/O, 1/l/I)
+- **Consequences**: URLs like `level2.bio/p/Xk7mPq2n` instead of `level2.bio/p/a1b2c3d4-...`
+
+### Production-safe logging
+- **Status**: Accepted
+- **Context**: Console logs useful for dev but shouldn't leak info in production
+- **Decision**: Create logger utility that only logs in development mode
+- **Alternatives considered**:
+  - Remove all logs: Rejected—too valuable for debugging
+  - Sentry-only: Deferred—will add for production error monitoring
+- **Consequences**: Debug info available in dev; silent in prod; ready for Sentry integration
 
 ## Data Architecture
 
@@ -276,6 +294,7 @@ level2bio/
 │   ├── features/
 │   │   ├── auth/
 │   │   │   ├── components/
+│   │   │   │   ├── AuthForm.tsx        # Combined email/password + LinkedIn OAuth
 │   │   │   │   └── LoginButton.tsx
 │   │   │   ├── hooks/
 │   │   │   │   └── useAuth.ts
@@ -338,7 +357,8 @@ level2bio/
 │   │   ├── constants.ts
 │   │   ├── dateUtils.ts                # Date formatting utilities
 │   │   ├── youtube.ts                  # YouTube URL parsing
-│   │   └── validation.ts               # Input validation utilities
+│   │   ├── validation.ts               # Input validation utilities
+│   │   └── logger.ts                   # Production-safe logging
 │   │
 │   ├── types/                          # TypeScript types
 │   │   ├── database.ts                 # Generated from Supabase
@@ -400,36 +420,43 @@ level2bio/
 
 ## Security Architecture
 
-- **Authentication**: Supabase Auth with LinkedIn OAuth provider
+- **Authentication**: Supabase Auth with email/password + LinkedIn OAuth (`linkedin_oidc` provider)
 - **Authorization**: Row Level Security (RLS) policies in Supabase
   - Users can only read/write their own data
   - Public profiles readable via share token (no auth)
   - Storage RLS enforces folder-based permissions (users can only access their own files)
 - **Data protection**:
   - OAuth tokens managed by Supabase (not stored in app)
-  - Share tokens are UUID v4 (unguessable)
+  - Share tokens are 8-char alphanumeric (unguessable, ~83 trillion combinations)
   - HTTPS only
   - Content Security Policy (CSP) headers restrict iframe sources to YouTube only
   - X-Frame-Options, X-Content-Type-Options, Referrer-Policy headers
+  - OAuth redirect URLs validated against VITE_APP_URL (prevents open redirect attacks)
 - **Input validation**:
   - File upload magic number validation (validates actual file content)
   - URL protocol validation (blocks javascript:, data: in links)
   - YouTube videoId validation (11-char alphanumeric only)
   - Password strength requirements (12+ chars, mixed case, numbers)
+  - Headline/bio length and content validation before save
 - **Privacy**:
   - Revoked links return neutral message (no info leak)
   - No tracking beyond simple view count
+  - Production-safe logging (no console output in production)
 
 ## Performance Considerations
 
 - **Initial load**: Code-split by route (React lazy loading)
 - **Bundle optimization**: react-markdown and other large dependencies in separate chunks
 - **Videos**: Stream from Supabase Storage, don't load until played; YouTube embeds via iframe
-- **Images**: Lazy loading with `loading="lazy"` attribute
-- **Queries**: React Query caching prevents redundant fetches; optimized column selection
+- **Images**: Lazy loading with `loading="lazy"` and `decoding="async"` attributes; `aspectRatio: auto` for CLS prevention
+- **Database queries**:
+  - React Query caching prevents redundant fetches
+  - Single join queries (e.g., profiles with stories) instead of N+1 patterns
+  - Optimized column selection
 - **React rendering**:
-  - Memoized components (React.memo) for expensive renders
-  - useMemo for expensive computations (change detection)
+  - Memoized components (React.memo) for Dashboard, ProfileCard, Toast, etc.
+  - useMemo for expensive computations (shareUrl, displayName, DialogContainer)
   - useCallback for stable function references
   - fast-deep-equal instead of JSON.stringify for comparisons
+  - Constants moved outside components to prevent recreation on render
 - **No premature optimization**: Measure first if issues arise

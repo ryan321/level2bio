@@ -26,7 +26,7 @@ All specs live in `/docs`. Consult before making changes:
 - **Backend**: Supabase (Auth, Database, Storage)
 - **Database**: PostgreSQL (via Supabase)
 - **File Storage**: Supabase Storage (videos, images)
-- **Auth**: LinkedIn OAuth (primary), GitHub OAuth (optional, for repo verification)
+- **Auth**: Email/password + LinkedIn OAuth (both available), GitHub OAuth (optional, for repo verification)
 - **Hosting**: TBD (Vercel or similar)
 
 ## Conventions
@@ -96,7 +96,17 @@ All specs live in `/docs`. Consult before making changes:
 - **Formatting help popup** (markdown syntax, YouTube embeds, file uploads)
 - **Security improvements** (file magic number validation, URL protocol validation, videoId validation)
 - **Accessibility** (ARIA labels, proper form associations, keyboard navigation)
+- **Story reordering** (drag handle icons, move up/down within profiles)
+- **Profile headline/bio overrides** (per-profile customization)
+- **LinkedIn OAuth** (combined auth form with email/password + LinkedIn OAuth)
+- **Short URLs** (8-char alphanumeric tokens for resume-friendly links)
+- **Production-safe logging** (logger utility that only logs in dev mode)
+- **OAuth security** (VITE_APP_URL for redirect validation)
+- **Query optimization** (single join queries in useProfiles)
+- **Memoization** (Dashboard, ProfileCard, Toast, useDialog optimized)
+- **Input validation** (headline/bio validation before save)
+- **Image optimization** (decoding="async", aspectRatio for CLS prevention)
 
 **Next up:**
-- Story reordering within profiles
-- Profile headline/bio overrides
+- E2E testing with Playwright
+- Error monitoring integration (Sentry or similar)

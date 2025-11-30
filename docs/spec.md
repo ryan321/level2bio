@@ -124,17 +124,21 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - [x] Password strength validation (12+ chars, mixed case, numbers)
   - [x] Session persists across browser restarts
   - [x] Candidate can log out
+  - [x] Same-email accounts merge (OAuth and email/password can access same user)
+  - [x] Combined auth form with both options visible
 - **User flow**:
   1. Candidate lands on Level2.bio
-  2. Clicks "Sign up with LinkedIn"
-  3. Authorizes on LinkedIn
-  4. Redirected back with account created
-  5. Sees dashboard with pre-filled info
+  2. Clicks "Continue with LinkedIn" or enters email/password
+  3. For LinkedIn: Authorizes on LinkedIn, redirected back with account created
+  4. For email: Fills in form, creates account
+  5. Sees dashboard (with pre-filled info for LinkedIn)
 - **Error states**:
   - LinkedIn OAuth fails: Show "Something went wrong. Try again or contact support."
   - LinkedIn token expires: Prompt re-authentication
+  - Invalid password: Show inline validation errors
 - **Edge cases**:
-  - Candidate has no LinkedIn: v1 requires LinkedIn; future versions may support email-only
+  - Candidate uses LinkedIn then later tries email with same address: Accounts linked automatically
+  - OAuth redirect URL manipulation: Validated against VITE_APP_URL
 
 ### Secondary (Should Have)
 
