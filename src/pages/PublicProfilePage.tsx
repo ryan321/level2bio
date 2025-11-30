@@ -35,12 +35,18 @@ export default function PublicProfilePage() {
       <header className="bg-white border-b">
         <div className="max-w-3xl mx-auto px-6 py-8">
           <div className="flex items-center gap-4">
-            {user.profile_photo_url && (
+            {user.profile_photo_url ? (
               <img
                 src={user.profile_photo_url}
                 alt={user.name}
                 className="w-16 h-16 rounded-full object-cover"
               />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-2xl font-semibold text-blue-600">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
             )}
             <div>
               <h1 className="text-2xl font-bold">{user.name}</h1>
@@ -52,6 +58,9 @@ export default function PublicProfilePage() {
           {displayBio && (
             <p className="mt-4 text-gray-700">{displayBio}</p>
           )}
+          <p className="mt-4 text-sm text-gray-500">
+            {user.name.split(' ')[0]} has shared {stories.length === 1 ? 'this work story' : 'these work stories'} with you.
+          </p>
         </div>
       </header>
 
@@ -59,7 +68,7 @@ export default function PublicProfilePage() {
       <main className="max-w-3xl mx-auto px-6 py-8">
         {stories.length === 0 ? (
           <p className="text-gray-500 text-center py-12">
-            No stories published yet.
+            No stories in this profile yet.
           </p>
         ) : (
           <div className="space-y-8">
