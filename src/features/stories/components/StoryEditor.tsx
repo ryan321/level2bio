@@ -3,27 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import type { WorkStory } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
+import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import { ROUTES } from '@/lib/constants'
 
 interface StoryEditorProps {
   story: WorkStory
-}
-
-// Extract YouTube video ID from various URL formats
-function extractYouTubeId(url: string): string | null {
-  if (!url) return null
-
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-    /^([a-zA-Z0-9_-]{11})$/, // Just the ID
-  ]
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match) return match[1]
-  }
-
-  return null
 }
 
 export function StoryEditor({ story }: StoryEditorProps) {
@@ -183,7 +167,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
             <div className="text-sm text-gray-500 mb-2">Preview:</div>
             <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
               <iframe
-                src={`https://www.youtube.com/embed/${videoId}`}
+                src={getYouTubeEmbedUrl(videoId)}
                 title="Video preview"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
