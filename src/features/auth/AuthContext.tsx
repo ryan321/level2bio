@@ -205,7 +205,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   setError('Failed to load user profile. Please try again.')
                 }
               }
-            } catch (err) {
+            } catch {
               if (isMountedRef.current) {
                 setError('Failed to load user profile. Please try again.')
               }
