@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from 'react'
+import { useState, useCallback, useMemo, type ReactNode } from 'react'
 import { AlertDialog, ConfirmDialog } from '@/components/Dialog'
 
 interface AlertState {
@@ -95,7 +95,7 @@ export function useDialog(): UseDialogReturn {
     setConfirmState((prev) => ({ ...prev, isOpen: false }))
   }, [])
 
-  const DialogContainer = (
+  const DialogContainer = useMemo(() => (
     <>
       <AlertDialog
         isOpen={alertState.isOpen}
@@ -114,7 +114,7 @@ export function useDialog(): UseDialogReturn {
         variant={confirmState.variant}
       />
     </>
-  )
+  ), [alertState, confirmState, closeAlert, closeConfirm])
 
   return {
     showAlert,

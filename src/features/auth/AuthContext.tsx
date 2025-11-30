@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 import type { User } from '@/types'
 
 // Auth user from Supabase Auth (OAuth or email)
@@ -137,7 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             .single()
 
           if (updateError) {
-            console.error('Failed to update user id:', updateError)
+            logger.error('Failed to update user id', updateError)
             return userByEmail // Return existing user even if update failed
           }
           return updatedUser
@@ -163,13 +164,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         .single()
 
       if (insertError) {
-        console.error('Failed to create user record:', insertError)
+        logger.error('Failed to create user record', insertError)
         return null
       }
 
       return newUser
     } catch (err) {
-      console.error('Error syncing user record:', err)
+      logger.error('Error syncing user record', err)
       return null
     }
   }, [])
@@ -236,10 +237,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign in with LinkedIn OAuth
   const signInWithLinkedIn = useCallback(async () => {
     setError(null)
+    // Use hardcoded origin for security - prevents open redirect attacks
+    const allowedOrigin = import.meta.env.VITE_APP_URL || window.location.origin
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'linkedin_oidc',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${allowedOrigin}/dashboard`,
       },
     })
     if (error) {

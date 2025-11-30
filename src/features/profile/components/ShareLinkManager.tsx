@@ -6,6 +6,7 @@ import {
   useRegenerateShareLink,
 } from '../hooks/useShareLinkMutations'
 import { useDialog } from '@/hooks/useDialog'
+import { logger } from '@/lib/logger'
 
 interface ShareLinkManagerProps {
   userId: string
@@ -37,7 +38,7 @@ export function ShareLinkManager({ userId, hasPublishedStories }: ShareLinkManag
     try {
       await createShareLink.mutateAsync(userId)
     } catch (err) {
-      console.error('Failed to create share link:', err)
+      logger.error('Failed to create share link', err)
       showAlert('Failed to create share link. Please try again.', 'Error')
     }
   }
@@ -60,7 +61,7 @@ export function ShareLinkManager({ userId, hasPublishedStories }: ShareLinkManag
         isActive: !shareLink.is_active,
       })
     } catch (err) {
-      console.error('Failed to toggle share link:', err)
+      logger.error('Failed to toggle share link', err)
       showAlert('Failed to update share link. Please try again.', 'Error')
     }
   }
@@ -78,7 +79,7 @@ export function ShareLinkManager({ userId, hasPublishedStories }: ShareLinkManag
         try {
           await regenerateShareLink.mutateAsync(shareLink.id)
         } catch (err) {
-          console.error('Failed to regenerate share link:', err)
+          logger.error('Failed to regenerate share link', err)
           showAlert('Failed to regenerate link. Please try again.', 'Error')
         }
       },
@@ -93,7 +94,7 @@ export function ShareLinkManager({ userId, hasPublishedStories }: ShareLinkManag
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      logger.error('Failed to copy', err)
       showAlert('Failed to copy link. Please copy it manually.', 'Error')
     }
   }

@@ -9,6 +9,7 @@ import {
 } from '@/features/stories'
 import type { TemplateType } from '@/features/stories'
 import { useDialog } from '@/hooks/useDialog'
+import { logger } from '@/lib/logger'
 import { ROUTES } from '@/lib/constants'
 
 export default function StoryEditorPage() {
@@ -49,7 +50,7 @@ export default function StoryEditorPage() {
       // Navigate to the new story's edit page (replace history so back goes to dashboard)
       navigate(ROUTES.STORY_EDITOR.replace(':id', newStory.id), { replace: true })
     } catch (err) {
-      console.error('Failed to create story:', err)
+      logger.error('Failed to create story', err)
       showAlert('Failed to create story. Please try again.', 'Error')
       setIsCreating(false)
     }

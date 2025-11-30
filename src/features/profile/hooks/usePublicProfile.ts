@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { logger } from '@/lib/logger'
 import type { User, WorkStory, Profile } from '@/types'
 
 export interface PublicProfile {
@@ -40,7 +41,7 @@ export function usePublicProfile(token: string | undefined) {
         try {
           await supabase.rpc('increment_profile_view', { p_share_token: token })
         } catch (err) {
-          console.error('Failed to update view count:', err)
+          logger.error('Failed to update view count', err)
         }
       })()
 

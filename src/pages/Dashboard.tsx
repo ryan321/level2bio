@@ -1,12 +1,17 @@
+import { memo, useMemo } from 'react'
 import { useAuth } from '@/features/auth'
 import { StoryList, useStories } from '@/features/stories'
 import { ProfileManager } from '@/features/profile'
 
-export default function Dashboard() {
+export default memo(function Dashboard() {
   const { user, authUser, signOut } = useAuth()
   const { data: stories } = useStories(user?.id)
 
-  const allStories = stories ?? []
+  const allStories = useMemo(() => stories ?? [], [stories])
+  const displayName = useMemo(
+    () => user?.name || authUser?.name || 'User',
+    [user?.name, authUser?.name]
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -14,9 +19,7 @@ export default function Dashboard() {
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <div className="flex items-center gap-4">
-            <span className="text-gray-600">
-              {user?.name || authUser?.name || 'User'}
-            </span>
+            <span className="text-gray-600">{displayName}</span>
             <button
               onClick={signOut}
               className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -35,4 +38,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}
+})

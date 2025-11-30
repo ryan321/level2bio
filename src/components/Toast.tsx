@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, memo, type ReactNode } from 'react'
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning'
 
@@ -18,6 +18,28 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 
 /** Duration in ms before toast auto-dismisses */
 const TOAST_DURATION_MS = 5000
+
+// Move style constants outside component to avoid recreation on each render
+const TYPE_STYLES: Record<ToastType, string> = {
+  success: 'bg-green-50 border-green-200 text-green-800',
+  error: 'bg-red-50 border-red-200 text-red-800',
+  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  info: 'bg-blue-50 border-blue-200 text-blue-800',
+}
+
+const TYPE_ICON_COLORS: Record<ToastType, string> = {
+  success: 'text-green-500',
+  error: 'text-red-500',
+  warning: 'text-yellow-500',
+  info: 'text-blue-500',
+}
+
+const TYPE_ICON_PATHS: Record<ToastType, string> = {
+  success: 'M5 13l4 4L19 7',
+  error: 'M6 18L18 6M6 6l12 12',
+  warning: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+  info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+}
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
@@ -70,44 +92,18 @@ function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id
   )
 }
 
-function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
-  const typeStyles: Record<ToastType, string> = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
-  }
-
-  const iconByType: Record<ToastType, ReactNode> = {
-    success: (
-      <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
-    ),
-    error: (
-      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    ),
-    warning: (
-      <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    ),
-    info: (
-      <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  }
-
+const ToastItem = memo(function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string) => void }) {
   return (
     <div
-      className={`flex items-start gap-3 p-4 rounded-lg border shadow-lg animate-slide-in ${typeStyles[toast.type]}`}
+      className={`flex items-start gap-3 p-4 rounded-lg border shadow-lg animate-slide-in ${TYPE_STYLES[toast.type]}`}
       role="alert"
       aria-live="polite"
     >
-      <span className="flex-shrink-0">{iconByType[toast.type]}</span>
+      <span className="flex-shrink-0">
+        <svg className={`w-5 h-5 ${TYPE_ICON_COLORS[toast.type]}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={TYPE_ICON_PATHS[toast.type]} />
+        </svg>
+      </span>
       <p className="text-sm flex-1">{toast.message}</p>
       <button
         onClick={() => onDismiss(toast.id)}
@@ -120,4 +116,4 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       </button>
     </div>
   )
-}
+})

@@ -6,6 +6,7 @@ import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
 import { MarkdownEditor } from './MarkdownEditor'
 import { ROUTES } from '@/lib/constants'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/features/auth'
 import { useToast } from '@/components/Toast'
 
@@ -166,7 +167,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
       const message = err instanceof Error ? err.message : 'Auto-save failed'
       setSaveError(message)
       addToast(message, 'error')
-      console.error('Auto-save failed:', err)
+      logger.error('Auto-save failed', err)
     } finally {
       setIsSaving(false)
     }

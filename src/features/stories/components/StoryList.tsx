@@ -3,6 +3,7 @@ import { useStories } from '../hooks/useStories'
 import { useDeleteStory } from '../hooks/useStoryMutations'
 import { StoryCard } from './StoryCard'
 import { useDialog } from '@/hooks/useDialog'
+import { logger } from '@/lib/logger'
 import { ROUTES } from '@/lib/constants'
 
 interface StoryListProps {
@@ -24,7 +25,7 @@ export function StoryList({ userId }: StoryListProps) {
         try {
           await deleteStory.mutateAsync({ id: storyId, userId })
         } catch (err) {
-          console.error('Failed to delete story:', err)
+          logger.error('Failed to delete story', err)
           showAlert('Failed to delete story. Please try again.', 'Error')
         }
       },

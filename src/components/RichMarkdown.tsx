@@ -80,7 +80,7 @@ export const RichMarkdown = memo(function RichMarkdown({ children }: RichMarkdow
         </a>
       )
     },
-    // Make images responsive with lazy loading
+    // Make images responsive with lazy loading and aspect-ratio for CLS prevention
     img: ({ src, alt }) => {
       // Security: validate image source protocol
       if (src && !isAllowedProtocol(src, ALLOWED_IMAGE_PROTOCOLS)) {
@@ -91,7 +91,9 @@ export const RichMarkdown = memo(function RichMarkdown({ children }: RichMarkdow
           src={src}
           alt={alt || ''}
           loading="lazy"
+          decoding="async"
           className="max-w-full h-auto rounded-lg my-4"
+          style={{ aspectRatio: 'auto' }}
         />
       )
     },

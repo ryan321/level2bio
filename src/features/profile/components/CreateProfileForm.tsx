@@ -1,6 +1,7 @@
 import { useState, memo } from 'react'
 import { useCreateProfile } from '../hooks/useProfileMutations'
 import { getMinDateTimeLocal } from '@/lib/dateUtils'
+import { logger } from '@/lib/logger'
 import type { WorkStory } from '@/types'
 
 interface CreateProfileFormProps {
@@ -47,7 +48,7 @@ export const CreateProfileForm = memo(function CreateProfileForm({
       })
       onSuccess()
     } catch (err) {
-      console.error('Failed to create profile:', err)
+      logger.error('Failed to create profile', err)
       showAlert('Failed to create profile. Please try again.', 'Error')
     }
   }

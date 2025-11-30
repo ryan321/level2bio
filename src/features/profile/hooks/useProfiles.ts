@@ -8,57 +8,58 @@ export interface ProfileWithStories extends Profile {
   stories: WorkStory[]
 }
 
+// Type for Supabase nested query response
+interface ProfileStoryJoin {
+  display_order: number
+  work_stories: WorkStory | null
+}
+
+interface ProfileWithJoin extends Profile {
+  profile_stories: ProfileStoryJoin[]
+}
+
 export function useProfiles(userId: string | undefined) {
   return useQuery({
     queryKey: [...PROFILES_QUERY_KEY, userId],
     queryFn: async (): Promise<ProfileWithStories[]> => {
       if (!userId) return []
 
-      // Fetch profiles
-      const { data: profiles, error: profilesError } = await supabase
+      // Single query with join - more efficient than two separate queries
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          profile_stories (
+            display_order,
+            work_stories (*)
+          )
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-      if (profilesError) {
-        throw new Error(`Failed to fetch profiles: ${profilesError.message}`)
+      if (error) {
+        throw new Error(`Failed to fetch profiles: ${error.message}`)
       }
 
       if (!profiles || profiles.length === 0) {
         return []
       }
 
-      // Fetch profile_stories with work_stories for all profiles
-      const profileIds = profiles.map((p) => p.id)
-      const { data: profileStories, error: psError } = await supabase
-        .from('profile_stories')
-        .select(`
-          profile_id,
-          display_order,
-          work_story:work_stories(*)
-        `)
-        .in('profile_id', profileIds)
-        .order('display_order', { ascending: true })
+      // Transform the nested data structure
+      return (profiles as ProfileWithJoin[]).map((profile) => {
+        const { profile_stories, ...profileData } = profile
 
-      if (psError) {
-        throw new Error(`Failed to fetch profile stories: ${psError.message}`)
-      }
+        // Sort by display_order and extract work_stories
+        const stories = (profile_stories || [])
+          .sort((a, b) => a.display_order - b.display_order)
+          .map((ps) => ps.work_stories)
+          .filter((story): story is WorkStory => story !== null)
 
-      // Map stories to profiles
-      const profileStoriesMap = new Map<string, WorkStory[]>()
-      for (const ps of profileStories || []) {
-        const stories = profileStoriesMap.get(ps.profile_id) || []
-        if (ps.work_story) {
-          stories.push(ps.work_story as unknown as WorkStory)
+        return {
+          ...profileData,
+          stories,
         }
-        profileStoriesMap.set(ps.profile_id, stories)
-      }
-
-      return profiles.map((profile) => ({
-        ...profile,
-        stories: profileStoriesMap.get(profile.id) || [],
-      }))
+      })
     },
     enabled: !!userId,
   })
@@ -70,37 +71,34 @@ export function useProfile(profileId: string | undefined) {
     queryFn: async (): Promise<ProfileWithStories | null> => {
       if (!profileId) return null
 
-      // Fetch profile
-      const { data: profile, error: profileError } = await supabase
+      // Single query with join
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          profile_stories (
+            display_order,
+            work_stories (*)
+          )
+        `)
         .eq('id', profileId)
         .single()
 
-      if (profileError) {
-        throw new Error(`Failed to fetch profile: ${profileError.message}`)
+      if (error) {
+        throw new Error(`Failed to fetch profile: ${error.message}`)
       }
 
-      // Fetch stories for this profile
-      const { data: profileStories, error: psError } = await supabase
-        .from('profile_stories')
-        .select(`
-          display_order,
-          work_story:work_stories(*)
-        `)
-        .eq('profile_id', profileId)
-        .order('display_order', { ascending: true })
+      const profileWithJoin = profile as ProfileWithJoin
+      const { profile_stories, ...profileData } = profileWithJoin
 
-      if (psError) {
-        throw new Error(`Failed to fetch profile stories: ${psError.message}`)
-      }
-
-      const stories = (profileStories || [])
-        .map((ps) => ps.work_story as unknown as WorkStory)
-        .filter(Boolean)
+      // Sort by display_order and extract work_stories
+      const stories = (profile_stories || [])
+        .sort((a, b) => a.display_order - b.display_order)
+        .map((ps) => ps.work_stories)
+        .filter((story): story is WorkStory => story !== null)
 
       return {
-        ...profile,
+        ...profileData,
         stories,
       }
     },

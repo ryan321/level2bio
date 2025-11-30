@@ -1,4 +1,4 @@
-import { useState, memo } from 'react'
+import { useState, memo, useMemo } from 'react'
 import {
   useUpdateProfile,
   useToggleProfile,
@@ -7,6 +7,8 @@ import {
   useUpdateProfileStories,
 } from '../hooks/useProfileMutations'
 import { toDateTimeLocal, formatDateTime, isExpired, getMinDateTimeLocal } from '@/lib/dateUtils'
+import { validateHeadline, validateBio } from '@/lib/validation'
+import { logger } from '@/lib/logger'
 import type { ProfileWithStories } from '../hooks/useProfiles'
 import type { WorkStory } from '@/types'
 
@@ -53,7 +55,10 @@ export const ProfileCard = memo(function ProfileCard({
   const [editHeadline, setEditHeadline] = useState(profile.headline || '')
   const [editBio, setEditBio] = useState(profile.bio || '')
 
-  const shareUrl = `${window.location.origin}/p/${profile.share_token}`
+  const shareUrl = useMemo(
+    () => `${window.location.origin}/p/${profile.share_token}`,
+    [profile.share_token]
+  )
 
   const handleToggle = async () => {
     try {
@@ -63,7 +68,7 @@ export const ProfileCard = memo(function ProfileCard({
         userId,
       })
     } catch (err) {
-      console.error('Failed to toggle profile:', err)
+      logger.error('Failed to toggle profile', err)
       showAlert('Failed to update profile. Please try again.', 'Error')
     }
   }
@@ -74,7 +79,7 @@ export const ProfileCard = memo(function ProfileCard({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err)
+      logger.error('Failed to copy', err)
       showAlert('Failed to copy link. Please copy it manually.', 'Error')
     }
   }
@@ -90,7 +95,7 @@ export const ProfileCard = memo(function ProfileCard({
         try {
           await regenerateToken.mutateAsync({ profileId: profile.id, userId })
         } catch (err) {
-          console.error('Failed to regenerate token:', err)
+          logger.error('Failed to regenerate token', err)
           showAlert('Failed to regenerate link. Please try again.', 'Error')
         }
       },
@@ -108,7 +113,7 @@ export const ProfileCard = memo(function ProfileCard({
         try {
           await deleteProfile.mutateAsync({ profileId: profile.id, userId })
         } catch (err) {
-          console.error('Failed to delete profile:', err)
+          logger.error('Failed to delete profile', err)
           showAlert('Failed to delete profile. Please try again.', 'Error')
         }
       },
@@ -124,7 +129,7 @@ export const ProfileCard = memo(function ProfileCard({
       })
       onCancelEdit()
     } catch (err) {
-      console.error('Failed to update stories:', err)
+      logger.error('Failed to update stories', err)
       showAlert('Failed to update stories. Please try again.', 'Error')
     }
   }
@@ -160,7 +165,7 @@ export const ProfileCard = memo(function ProfileCard({
       })
       setEditingExpiration(false)
     } catch (err) {
-      console.error('Failed to update expiration:', err)
+      logger.error('Failed to update expiration', err)
       showAlert('Failed to update expiration. Please try again.', 'Error')
     }
   }
@@ -175,12 +180,28 @@ export const ProfileCard = memo(function ProfileCard({
       setExpiresAt('')
       setEditingExpiration(false)
     } catch (err) {
-      console.error('Failed to clear expiration:', err)
+      logger.error('Failed to clear expiration', err)
       showAlert('Failed to clear expiration. Please try again.', 'Error')
     }
   }
 
   const handleSaveDetails = async () => {
+    // Validate inputs before saving
+    if (editHeadline) {
+      const headlineResult = validateHeadline(editHeadline)
+      if (!headlineResult.valid) {
+        showAlert(headlineResult.error!, 'Validation Error')
+        return
+      }
+    }
+    if (editBio) {
+      const bioResult = validateBio(editBio)
+      if (!bioResult.valid) {
+        showAlert(bioResult.error!, 'Validation Error')
+        return
+      }
+    }
+
     try {
       await updateProfile.mutateAsync({
         profileId: profile.id,
@@ -190,7 +211,7 @@ export const ProfileCard = memo(function ProfileCard({
       })
       setEditingDetails(false)
     } catch (err) {
-      console.error('Failed to update profile details:', err)
+      logger.error('Failed to update profile details', err)
       showAlert('Failed to update profile details. Please try again.', 'Error')
     }
   }
@@ -207,7 +228,7 @@ export const ProfileCard = memo(function ProfileCard({
       setEditBio('')
       setEditingDetails(false)
     } catch (err) {
-      console.error('Failed to clear profile details:', err)
+      logger.error('Failed to clear profile details', err)
       showAlert('Failed to clear profile details. Please try again.', 'Error')
     }
   }
