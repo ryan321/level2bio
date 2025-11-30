@@ -222,7 +222,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_profile_view: {
+        Args: { p_share_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

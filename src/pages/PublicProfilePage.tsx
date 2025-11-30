@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { usePublicProfile } from '@/features/profile'
 import { templates, type TemplateType } from '@/features/stories'
+import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import type { WorkStory } from '@/types'
 
 export default function PublicProfilePage() {
@@ -136,20 +137,7 @@ function StoryViewer({ story }: { story: WorkStory }) {
 }
 
 function VideoPlayer({ url }: { url: string }) {
-  // Extract YouTube video ID
-  const getYouTubeId = (url: string): string | null => {
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-      /^([a-zA-Z0-9_-]{11})$/,
-    ]
-    for (const pattern of patterns) {
-      const match = url.match(pattern)
-      if (match) return match[1]
-    }
-    return null
-  }
-
-  const videoId = getYouTubeId(url)
+  const videoId = extractYouTubeId(url)
 
   if (!videoId) {
     return null
@@ -158,7 +146,7 @@ function VideoPlayer({ url }: { url: string }) {
   return (
     <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
       <iframe
-        src={`https://www.youtube.com/embed/${videoId}`}
+        src={getYouTubeEmbedUrl(videoId)}
         title="Video walkthrough"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen

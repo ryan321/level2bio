@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Link } from 'react-router-dom'
 import type { WorkStory } from '@/types'
 import { templates } from '../templates'
@@ -8,7 +9,7 @@ interface StoryCardProps {
   onDelete?: (id: string) => void
 }
 
-export function StoryCard({ story, onDelete }: StoryCardProps) {
+export const StoryCard = memo(function StoryCard({ story, onDelete }: StoryCardProps) {
   const template = templates[story.template_type]
   const responses = story.responses as Record<string, string>
   const filledPrompts = Object.values(responses).filter((v) => v && v.trim()).length
@@ -48,4 +49,4 @@ export function StoryCard({ story, onDelete }: StoryCardProps) {
       </div>
     </div>
   )
-}
+})

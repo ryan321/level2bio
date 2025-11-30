@@ -35,24 +35,10 @@ export function usePublicProfile(token: string | undefined) {
         return null
       }
 
-      // Increment view count (fire and forget - don't block the profile load)
+      // Increment view count atomically (fire and forget - don't block the profile load)
       void (async () => {
         try {
-          const { data } = await supabase
-            .from('profiles')
-            .select('view_count')
-            .eq('share_token', token)
-            .single()
-
-          if (data) {
-            await supabase
-              .from('profiles')
-              .update({
-                view_count: (data.view_count || 0) + 1,
-                last_viewed_at: new Date().toISOString(),
-              })
-              .eq('share_token', token)
-          }
+          await supabase.rpc('increment_profile_view', { p_share_token: token })
         } catch (err) {
           console.error('Failed to update view count:', err)
         }
