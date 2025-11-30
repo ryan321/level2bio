@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom'
 import { usePublicProfile } from '@/features/profile'
 import { templates, type TemplateType } from '@/features/stories'
 import { RichMarkdown } from '@/components/RichMarkdown'
-import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import type { WorkStory, StoryAsset } from '@/types'
 
 export default function PublicProfilePage() {
@@ -131,12 +130,6 @@ function StoryViewer({ story }: { story: WorkStory }) {
         })}
       </div>
 
-      {story.video_url && (
-        <div className="mt-6">
-          <VideoPlayer url={story.video_url} />
-        </div>
-      )}
-
       {assets.length > 0 && (
         <div className="mt-6 pt-6 border-t">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Downloads</h3>
@@ -185,26 +178,6 @@ function AssetDownloadLink({ asset }: { asset: StoryAsset }) {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
       </svg>
     </a>
-  )
-}
-
-function VideoPlayer({ url }: { url: string }) {
-  const videoId = extractYouTubeId(url)
-
-  if (!videoId) {
-    return null
-  }
-
-  return (
-    <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-      <iframe
-        src={getYouTubeEmbedUrl(videoId)}
-        title="Video walkthrough"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-        className="w-full h-full"
-      />
-    </div>
   )
 }
 

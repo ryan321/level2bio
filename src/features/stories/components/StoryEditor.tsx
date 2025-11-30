@@ -4,7 +4,6 @@ import type { WorkStory, StoryAsset } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
 import { MarkdownEditor } from './MarkdownEditor'
-import { extractYouTubeId, getYouTubeEmbedUrl } from '@/lib/youtube'
 import { ROUTES } from '@/lib/constants'
 import { useAuth } from '@/features/auth'
 
@@ -23,7 +22,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
   const [responses, setResponses] = useState<Record<string, string>>(
     (story.responses as Record<string, string>) || {}
   )
-  const [videoUrl, setVideoUrl] = useState(story.video_url || '')
   const [assets, setAssets] = useState<StoryAsset[]>(
     (story.assets as unknown as StoryAsset[]) || []
   )
@@ -35,11 +33,10 @@ export function StoryEditor({ story }: StoryEditorProps) {
   useEffect(() => {
     const hasChanges =
       title !== story.title ||
-      videoUrl !== (story.video_url || '') ||
       JSON.stringify(responses) !== JSON.stringify(story.responses || {}) ||
       JSON.stringify(assets) !== JSON.stringify(story.assets || [])
     setHasUnsavedChanges(hasChanges)
-  }, [title, responses, videoUrl, assets, story])
+  }, [title, responses, assets, story])
 
   // Auto-save with debounce
   const save = useCallback(async () => {
@@ -52,7 +49,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
         updates: {
           title,
           responses,
-          video_url: videoUrl || null,
           assets: assets as unknown as undefined,
         },
       })
@@ -63,7 +59,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
     } finally {
       setIsSaving(false)
     }
-  }, [story.id, title, responses, videoUrl, assets, hasUnsavedChanges, isSaving, updateStory])
+  }, [story.id, title, responses, assets, hasUnsavedChanges, isSaving, updateStory])
 
   // Debounced auto-save
   useEffect(() => {
@@ -90,8 +86,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
     }
     navigate(ROUTES.DASHBOARD)
   }
-
-  const videoId = extractYouTubeId(videoUrl)
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -159,43 +153,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
           ))}
         </div>
       )}
-
-      {/* Video Section */}
-      <div className="mt-10 pt-8 border-t">
-        <h3 className="text-lg font-semibold mb-2">Video Walkthrough (Optional)</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Add a YouTube link to walk viewers through your story. Private or unlisted videos work great.
-        </p>
-        <input
-          type="text"
-          value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
-          placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
-          className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-        />
-
-        {/* Video Preview */}
-        {videoId && (
-          <div className="mt-4">
-            <div className="text-sm text-gray-500 mb-2">Preview:</div>
-            <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-              <iframe
-                src={getYouTubeEmbedUrl(videoId)}
-                title="Video preview"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        )}
-
-        {videoUrl && !videoId && (
-          <p className="text-sm text-red-600 mt-2">
-            Could not parse YouTube URL. Please use a standard YouTube link.
-          </p>
-        )}
-      </div>
 
     </div>
   )
