@@ -194,6 +194,78 @@ function formatContent(content: ContentBlock[] | string): string {
   return parts.join('\n\n')
 }
 
+function isUserTextMessage(entry: ConversationEntry): boolean {
+  // Check if this is a real user-typed message (not a tool result)
+  if (entry.type !== 'user') return false
+
+  const content = entry.message?.content
+  if (!content) return false
+
+  // If it's a string, it's user text
+  if (typeof content === 'string') {
+    // Skip command messages and tool results
+    if (content.includes('<command-message>') && content.includes('is running')) return false
+    return content.trim().length > 0
+  }
+
+  // If it's an array, check for text blocks (not tool_result)
+  if (Array.isArray(content)) {
+    return content.some(block => block.type === 'text' && block.text && block.text.trim().length > 0)
+  }
+
+  return false
+}
+
+function hasToolContent(entry: ConversationEntry): boolean {
+  const content = entry.message?.content
+  if (!content || typeof content === 'string') return false
+
+  return Array.isArray(content) && content.some(block =>
+    block.type === 'tool_use' || block.type === 'tool_result'
+  )
+}
+
+function formatUserContent(content: ContentBlock[] | string): string {
+  if (typeof content === 'string') {
+    // Skip command wrapper messages
+    if (content.includes('<command-message>') && content.includes('is running')) {
+      return ''
+    }
+    return content
+  }
+
+  // Only extract text blocks for user messages
+  const textParts: string[] = []
+  for (const block of content) {
+    if (block.type === 'text' && block.text) {
+      textParts.push(block.text)
+    }
+  }
+  return textParts.join('\n\n')
+}
+
+function formatAssistantText(content: ContentBlock[] | string): string {
+  if (typeof content === 'string') return content
+
+  const textParts: string[] = []
+  for (const block of content) {
+    if (block.type === 'text' && block.text) {
+      textParts.push(block.text)
+    }
+  }
+  return textParts.join('\n\n')
+}
+
+function formatToolCalls(content: ContentBlock[]): string {
+  const parts: string[] = []
+  for (const block of content) {
+    if (block.type === 'tool_use') {
+      parts.push(formatToolUse(block))
+    }
+  }
+  return parts.join('\n')
+}
+
 function conversationToMarkdown(conv: Conversation): string {
   const lines: string[] = []
 
@@ -209,58 +281,69 @@ function conversationToMarkdown(conv: Conversation): string {
   lines.push('---')
   lines.push('')
 
-  // Build a map for ordering by parentUuid
-  const entryMap = new Map<string, ConversationEntry>()
   for (const entry of conv.entries) {
-    entryMap.set(entry.uuid, entry)
-  }
-
-  // Process entries in order (they should already be ordered in the file)
-  let lastRole = ''
-
-  for (const entry of conv.entries) {
-    const role = entry.type
     const timestamp = new Date(entry.timestamp)
     const timeStr = timestamp.toLocaleTimeString()
-
-    // Skip entries without meaningful content
     const content = entry.message?.content
-    const hasContent = content && (
-      typeof content === 'string' ? content.trim().length > 0 : content.length > 0
-    )
 
-    if (!hasContent) {
-      // But check for tool results
-      if (entry.toolUseResult) {
-        const toolOutput = formatToolResult(entry)
-        if (toolOutput) {
-          lines.push(toolOutput)
+    // Handle user messages - make them prominent
+    if (isUserTextMessage(entry)) {
+      const userText = formatUserContent(content)
+      if (userText.trim()) {
+        lines.push(`---`)
+        lines.push('')
+        lines.push(`## 💬 USER`)
+        lines.push(`*${timeStr}*`)
+        lines.push('')
+        lines.push(`> **${userText.split('\n')[0]}**`)  // First line bold
+        if (userText.includes('\n')) {
+          lines.push('>')
+          lines.push(`> ${userText.split('\n').slice(1).join('\n> ')}`)
         }
+        lines.push('')
+        lines.push(`---`)
+        lines.push('')
       }
       continue
     }
 
-    // Add role header if changed
-    if (role !== lastRole) {
-      const roleLabel = role === 'user' ? '👤 User' : '🤖 Assistant'
-      lines.push(`## ${roleLabel}`)
-      lines.push(`*${timeStr}*`)
-      lines.push('')
-      lastRole = role
+    // Handle assistant messages
+    if (entry.type === 'assistant' && content) {
+      // First, output any text content
+      const assistantText = formatAssistantText(content)
+      if (assistantText.trim()) {
+        lines.push(`### 🤖 Assistant`)
+        lines.push(`*${timeStr}*`)
+        lines.push('')
+        lines.push(assistantText)
+        lines.push('')
+      }
+
+      // Then output tool calls separately
+      if (Array.isArray(content)) {
+        const toolCalls = formatToolCalls(content)
+        if (toolCalls.trim()) {
+          lines.push(`<details>`)
+          lines.push(`<summary>🔧 Tool Calls</summary>`)
+          lines.push('')
+          lines.push(toolCalls)
+          lines.push('')
+          lines.push(`</details>`)
+          lines.push('')
+        }
+      }
     }
 
-    // Format content
-    const formatted = formatContent(entry.message.content)
-    if (formatted.trim()) {
-      lines.push(formatted)
-      lines.push('')
-    }
-
-    // Add tool results if present
+    // Handle tool results
     if (entry.toolUseResult) {
       const toolOutput = formatToolResult(entry)
-      if (toolOutput) {
+      if (toolOutput.trim()) {
+        lines.push(`<details>`)
+        lines.push(`<summary>📤 Tool Output</summary>`)
+        lines.push('')
         lines.push(toolOutput)
+        lines.push('')
+        lines.push(`</details>`)
         lines.push('')
       }
     }
