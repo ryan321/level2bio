@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth'
 import {
@@ -16,10 +16,18 @@ export default function StoryEditorPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { showAlert, DialogContainer } = useDialog()
-  const isNew = id === 'new'
+  // isNew is true if id is undefined (matched /stories/new route) or explicitly 'new'
+  const isNew = !id || id === 'new'
 
   // For new stories, track creation state
   const [isCreating, setIsCreating] = useState(false)
+
+  // Reset isCreating when we navigate to an existing story
+  useEffect(() => {
+    if (!isNew) {
+      setIsCreating(false)
+    }
+  }, [isNew])
 
   const createStory = useCreateStory()
 

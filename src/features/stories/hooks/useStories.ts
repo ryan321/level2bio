@@ -32,6 +32,13 @@ export function useStory(storyId: string | undefined) {
     queryFn: async (): Promise<WorkStory | null> => {
       if (!storyId) return null
 
+      // Ensure we have an authenticated session before querying
+      // This prevents RLS from returning empty results when auth isn't ready
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Not authenticated')
+      }
+
       const { data, error } = await supabase
         .from('work_stories')
         .select('*')
@@ -48,5 +55,8 @@ export function useStory(storyId: string | undefined) {
       return data
     },
     enabled: !!storyId,
+    // Retry a few times in case auth session isn't immediately available
+    retry: 2,
+    retryDelay: 500,
   })
 }

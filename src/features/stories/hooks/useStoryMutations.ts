@@ -54,7 +54,10 @@ export function useCreateStory() {
       return data
     },
     onSuccess: (data) => {
+      // Invalidate stories list
       queryClient.invalidateQueries({ queryKey: [...STORIES_QUERY_KEY, data.user_id] })
+      // Pre-populate the story detail cache so it's available immediately after navigation
+      queryClient.setQueryData([...STORIES_QUERY_KEY, 'detail', data.id], data)
     },
   })
 }
