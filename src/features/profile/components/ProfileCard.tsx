@@ -137,6 +137,20 @@ export const ProfileCard = memo(function ProfileCard({
     )
   }
 
+  const moveStory = (storyId: string, direction: 'up' | 'down') => {
+    setSelectedStoryIds((prev) => {
+      const index = prev.indexOf(storyId)
+      if (index === -1) return prev
+      if (direction === 'up' && index === 0) return prev
+      if (direction === 'down' && index === prev.length - 1) return prev
+
+      const newIds = [...prev]
+      const swapIndex = direction === 'up' ? index - 1 : index + 1
+      ;[newIds[index], newIds[swapIndex]] = [newIds[swapIndex], newIds[index]]
+      return newIds
+    })
+  }
+
   const handleSaveExpiration = async () => {
     try {
       await updateProfile.mutateAsync({
@@ -400,22 +414,86 @@ export const ProfileCard = memo(function ProfileCard({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Edit Stories
           </label>
-          <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
-            {stories.map((story) => (
-              <label
-                key={story.id}
-                className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedStoryIds.includes(story.id)}
-                  onChange={() => toggleStory(story.id)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm">{story.title}</span>
-              </label>
-            ))}
-          </div>
+
+          {/* Selected stories with reorder controls */}
+          {selectedStoryIds.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs text-gray-500 mb-2">Selected (drag to reorder)</p>
+              <div className="space-y-1">
+                {selectedStoryIds.map((storyId, index) => {
+                  const story = stories.find((s) => s.id === storyId)
+                  if (!story) return null
+                  return (
+                    <div
+                      key={story.id}
+                      className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded"
+                    >
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => moveStory(story.id, 'up')}
+                          disabled={index === 0}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          aria-label="Move up"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => moveStory(story.id, 'down')}
+                          disabled={index === selectedStoryIds.length - 1}
+                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          aria-label="Move down"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      </div>
+                      <span className="text-sm flex-1">{story.title}</span>
+                      <button
+                        onClick={() => toggleStory(story.id)}
+                        className="text-gray-400 hover:text-red-500"
+                        aria-label="Remove story"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Available stories to add */}
+          {stories.filter((s) => !selectedStoryIds.includes(s.id)).length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs text-gray-500 mb-2">Available stories</p>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {stories
+                  .filter((story) => !selectedStoryIds.includes(story.id))
+                  .map((story) => (
+                    <button
+                      key={story.id}
+                      onClick={() => toggleStory(story.id)}
+                      className="flex items-center gap-2 p-2 w-full text-left rounded hover:bg-gray-100"
+                    >
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-sm text-gray-600">{story.title}</span>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {selectedStoryIds.length === 0 && (
+            <p className="text-sm text-gray-500 mb-3">No stories selected. Add stories from the list above.</p>
+          )}
+
           <div className="flex justify-end gap-2">
             <button
               onClick={onCancelEdit}

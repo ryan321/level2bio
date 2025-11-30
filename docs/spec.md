@@ -61,7 +61,7 @@ Level2.bio is a private, candidate-controlled space where job seekers can explai
   - [x] Candidate can create multiple profiles
   - [x] Each profile has a name (e.g., "Backend Focus", "Startup Role")
   - [x] Candidate selects which stories to include in each profile
-  - [ ] Stories can be reordered within a profile
+  - [x] Stories can be reordered within a profile
   - [x] Same story can appear in multiple profiles
   - [x] Optional: Override headline/bio per profile
   - [x] Each profile has its own unique, unguessable share URL
