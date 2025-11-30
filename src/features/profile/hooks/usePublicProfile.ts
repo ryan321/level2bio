@@ -56,11 +56,21 @@ export function usePublicProfile(token: string | undefined) {
       }
 
       // Fetch stories for this profile via profile_stories join table
+      // Select only needed columns to reduce payload size
       const { data: profileStories, error: psError } = await supabase
         .from('profile_stories')
         .select(`
           display_order,
-          work_story:work_stories(*)
+          work_story:work_stories(
+            id,
+            title,
+            template_type,
+            responses,
+            assets,
+            video_url,
+            created_at,
+            updated_at
+          )
         `)
         .eq('profile_id', profile.id)
         .order('display_order', { ascending: true })

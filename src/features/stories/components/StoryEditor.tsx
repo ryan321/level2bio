@@ -1,11 +1,16 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import isEqual from 'fast-deep-equal'
 import type { WorkStory, StoryAsset } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
 import { MarkdownEditor } from './MarkdownEditor'
 import { ROUTES } from '@/lib/constants'
 import { useAuth } from '@/features/auth'
+import { useToast } from '@/components/Toast'
+
+/** Auto-save debounce delay in milliseconds */
+const AUTO_SAVE_DELAY_MS = 2000
 
 interface StoryEditorProps {
   story: WorkStory
@@ -14,6 +19,7 @@ interface StoryEditorProps {
 export function StoryEditor({ story }: StoryEditorProps) {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { addToast } = useToast()
   const updateStory = useUpdateStory()
   const template = templates[story.template_type as TemplateType]
 
@@ -27,58 +33,69 @@ export function StoryEditor({ story }: StoryEditorProps) {
   )
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Track changes
-  useEffect(() => {
-    const hasChanges =
+  // Use refs to avoid stale closures in the save callback
+  const titleRef = useRef(title)
+  const responsesRef = useRef(responses)
+  const assetsRef = useRef(assets)
+
+  // Keep refs in sync with state
+  useEffect(() => { titleRef.current = title }, [title])
+  useEffect(() => { responsesRef.current = responses }, [responses])
+  useEffect(() => { assetsRef.current = assets }, [assets])
+
+  // Memoized change detection using deep equality
+  const hasUnsavedChanges = useMemo(() => {
+    return (
       title !== story.title ||
-      JSON.stringify(responses) !== JSON.stringify(story.responses || {}) ||
-      JSON.stringify(assets) !== JSON.stringify(story.assets || [])
-    setHasUnsavedChanges(hasChanges)
-  }, [title, responses, assets, story])
+      !isEqual(responses, story.responses || {}) ||
+      !isEqual(assets, story.assets || [])
+    )
+  }, [title, responses, assets, story.title, story.responses, story.assets])
 
-  // Auto-save with debounce
+  // Stable save function that reads from refs
   const save = useCallback(async () => {
-    if (!hasUnsavedChanges || isSaving) return
-
     setIsSaving(true)
+    setSaveError(null)
     try {
       await updateStory.mutateAsync({
         id: story.id,
         updates: {
-          title,
-          responses,
-          assets: assets as unknown as undefined,
+          title: titleRef.current,
+          responses: responsesRef.current,
+          assets: assetsRef.current as unknown as undefined,
         },
       })
       setLastSaved(new Date())
-      setHasUnsavedChanges(false)
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Auto-save failed'
+      setSaveError(message)
+      addToast(message, 'error')
       console.error('Auto-save failed:', err)
     } finally {
       setIsSaving(false)
     }
-  }, [story.id, title, responses, assets, hasUnsavedChanges, isSaving, updateStory])
+  }, [story.id, updateStory, addToast])
 
-  // Debounced auto-save
+  // Debounced auto-save - only triggers when changes exist and not currently saving
   useEffect(() => {
-    if (!hasUnsavedChanges) return
+    if (!hasUnsavedChanges || isSaving) return
 
     const timer = setTimeout(() => {
       save()
-    }, 2000) // Save after 2 seconds of no changes
+    }, AUTO_SAVE_DELAY_MS)
 
     return () => clearTimeout(timer)
-  }, [hasUnsavedChanges, save])
+  }, [hasUnsavedChanges, isSaving, save])
 
-  const handleResponseChange = (key: string, value: string) => {
+  const handleResponseChange = useCallback((key: string, value: string) => {
     setResponses((prev) => ({ ...prev, [key]: value }))
-  }
+  }, [])
 
-  const handleAssetUploaded = (asset: StoryAsset) => {
+  const handleAssetUploaded = useCallback((asset: StoryAsset) => {
     setAssets((prev) => [...prev, asset])
-  }
+  }, [])
 
   const handleSaveAndExit = async () => {
     if (hasUnsavedChanges) {
@@ -98,6 +115,8 @@ export function StoryEditor({ story }: StoryEditorProps) {
           <div className="text-xs text-gray-400">
             {isSaving ? (
               'Saving...'
+            ) : saveError ? (
+              <span className="text-red-500">{saveError}</span>
             ) : lastSaved ? (
               `Last saved ${lastSaved.toLocaleTimeString()}`
             ) : hasUnsavedChanges ? (
@@ -109,7 +128,9 @@ export function StoryEditor({ story }: StoryEditorProps) {
         </div>
         <button
           onClick={handleSaveAndExit}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          disabled={isSaving}
+          aria-label="Save and return to dashboard"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
         >
           Done
         </button>
@@ -117,10 +138,11 @@ export function StoryEditor({ story }: StoryEditorProps) {
 
       {/* Title */}
       <div className="mb-8">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="story-title" className="block text-sm font-medium text-gray-700 mb-2">
           Story Title
         </label>
         <input
+          id="story-title"
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -134,13 +156,17 @@ export function StoryEditor({ story }: StoryEditorProps) {
         <div className="space-y-8">
           {template.prompts.map((prompt) => (
             <div key={prompt.key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor={`prompt-${prompt.key}`}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 {prompt.label}
               </label>
               {prompt.hint && (
                 <p className="text-sm text-gray-500 mb-2">{prompt.hint}</p>
               )}
               <MarkdownEditor
+                id={`prompt-${prompt.key}`}
                 value={responses[prompt.key] || ''}
                 onChange={(value) => handleResponseChange(prompt.key, value)}
                 placeholder={prompt.placeholder}

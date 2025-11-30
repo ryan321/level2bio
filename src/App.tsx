@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider, ProtectedRoute } from '@/features/auth'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ToastProvider } from '@/components/Toast'
 import { ROUTES } from '@/lib/constants'
 
 // Lazy load pages for code splitting
@@ -35,9 +36,10 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <BrowserRouter>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
+          <ToastProvider>
+            <BrowserRouter>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
               <Route path={ROUTES.HOME} element={<Home />} />
               <Route
                 path={ROUTES.DASHBOARD}
@@ -64,10 +66,11 @@ function App() {
                 }
               />
               <Route path={ROUTES.PUBLIC_PROFILE} element={<PublicProfilePage />} />
-              <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+                <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
