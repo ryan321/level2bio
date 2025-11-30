@@ -59,7 +59,6 @@ export interface Database {
           title: string
           responses: Json
           video_url: string | null
-          status: 'draft' | 'published'
           display_order: number
           created_at: string
           updated_at: string
@@ -71,7 +70,6 @@ export interface Database {
           title: string
           responses?: Json
           video_url?: string | null
-          status?: 'draft' | 'published'
           display_order?: number
           created_at?: string
           updated_at?: string
@@ -83,7 +81,6 @@ export interface Database {
           title?: string
           responses?: Json
           video_url?: string | null
-          status?: 'draft' | 'published'
           display_order?: number
           created_at?: string
           updated_at?: string

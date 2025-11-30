@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import type { WorkStory } from '@/types'
 import { templates, type TemplateType } from '../templates'
 import { useUpdateStory } from '../hooks/useStoryMutations'
-import { useDialog } from '@/hooks/useDialog'
 import { ROUTES } from '@/lib/constants'
 
 interface StoryEditorProps {
@@ -30,7 +29,6 @@ function extractYouTubeId(url: string): string | null {
 export function StoryEditor({ story }: StoryEditorProps) {
   const navigate = useNavigate()
   const updateStory = useUpdateStory()
-  const { showAlert, DialogContainer } = useDialog()
   const template = templates[story.template_type as TemplateType]
 
   // Local state for form
@@ -90,54 +88,6 @@ export function StoryEditor({ story }: StoryEditorProps) {
     setResponses((prev) => ({ ...prev, [key]: value }))
   }
 
-  const handlePublish = async () => {
-    // Validate
-    if (!title.trim()) {
-      showAlert('Please add a title for your story.', 'Missing Title')
-      return
-    }
-
-    const filledPrompts = Object.values(responses).filter((v) => v && v.trim()).length
-    if (filledPrompts === 0) {
-      showAlert('Please fill in at least one prompt before publishing.', 'Missing Content')
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      await updateStory.mutateAsync({
-        id: story.id,
-        updates: {
-          title,
-          responses,
-          video_url: videoUrl || null,
-          status: 'published',
-        },
-      })
-      navigate(ROUTES.DASHBOARD)
-    } catch (err) {
-      console.error('Publish failed:', err)
-      showAlert('Failed to publish. Please try again.', 'Error')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleUnpublish = async () => {
-    setIsSaving(true)
-    try {
-      await updateStory.mutateAsync({
-        id: story.id,
-        updates: { status: 'draft' },
-      })
-    } catch (err) {
-      console.error('Unpublish failed:', err)
-      showAlert('Failed to unpublish. Please try again.', 'Error')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   const handleSaveAndExit = async () => {
     if (hasUnsavedChanges) {
       await save()
@@ -146,22 +96,14 @@ export function StoryEditor({ story }: StoryEditorProps) {
   }
 
   const videoId = extractYouTubeId(videoUrl)
-  const isPublished = story.status === 'published'
 
   return (
-    <>
-    {DialogContainer}
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="text-sm text-gray-500 mb-1">
             {template.name}
-            {isPublished && (
-              <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Published
-              </span>
-            )}
           </div>
           <div className="text-xs text-gray-400">
             {isSaving ? (
@@ -175,31 +117,12 @@ export function StoryEditor({ story }: StoryEditorProps) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleSaveAndExit}
-            className="text-gray-600 hover:text-gray-800 text-sm font-medium"
-          >
-            Save & Exit
-          </button>
-          {isPublished ? (
-            <button
-              onClick={handleUnpublish}
-              disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-            >
-              Unpublish
-            </button>
-          ) : (
-            <button
-              onClick={handlePublish}
-              disabled={isSaving}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              Publish
-            </button>
-          )}
-        </div>
+        <button
+          onClick={handleSaveAndExit}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+        >
+          Done
+        </button>
       </div>
 
       {/* Title */}
@@ -277,6 +200,5 @@ export function StoryEditor({ story }: StoryEditorProps) {
         )}
       </div>
     </div>
-    </>
   )
 }

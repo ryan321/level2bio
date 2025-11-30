@@ -13,8 +13,3 @@ export const TEMPLATE_TYPES = {
   ROLE_HIGHLIGHT: 'role_highlight',
   LESSONS_LEARNED: 'lessons_learned',
 } as const
-
-export const STORY_STATUS = {
-  DRAFT: 'draft',
-  PUBLISHED: 'published',
-} as const

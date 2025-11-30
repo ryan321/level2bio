@@ -37,7 +37,6 @@ export function useCreateStory() {
         template_type: templateType,
         title,
         responses: {},
-        status: 'draft',
         display_order: nextOrder,
       }
 
@@ -109,28 +108,3 @@ export function useDeleteStory() {
   })
 }
 
-export function usePublishStory() {
-  const updateStory = useUpdateStory()
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return updateStory.mutateAsync({
-        id,
-        updates: { status: 'published' },
-      })
-    },
-  })
-}
-
-export function useUnpublishStory() {
-  const updateStory = useUpdateStory()
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      return updateStory.mutateAsync({
-        id,
-        updates: { status: 'draft' },
-      })
-    },
-  })
-}

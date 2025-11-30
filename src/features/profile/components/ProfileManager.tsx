@@ -12,10 +12,10 @@ import type { WorkStory } from '@/types'
 
 interface ProfileManagerProps {
   userId: string
-  publishedStories: WorkStory[]
+  stories: WorkStory[]
 }
 
-export function ProfileManager({ userId, publishedStories }: ProfileManagerProps) {
+export function ProfileManager({ userId, stories }: ProfileManagerProps) {
   const { data: profiles, isLoading } = useProfiles(userId)
   const { showAlert, showConfirm, DialogContainer } = useDialog()
 
@@ -52,9 +52,9 @@ export function ProfileManager({ userId, publishedStories }: ProfileManagerProps
           Create curated profiles with selected stories to share with specific audiences.
         </p>
 
-        {publishedStories.length === 0 && (
+        {stories.length === 0 && (
           <p className="text-amber-600 text-sm mb-4">
-            Publish at least one story to create a shareable profile.
+            Create at least one story to create a shareable profile.
           </p>
         )}
 
@@ -62,7 +62,7 @@ export function ProfileManager({ userId, publishedStories }: ProfileManagerProps
         {isCreating && (
           <CreateProfileForm
             userId={userId}
-            publishedStories={publishedStories}
+            stories={stories}
             onCancel={() => setIsCreating(false)}
             onSuccess={() => setIsCreating(false)}
             showAlert={showAlert}
@@ -77,7 +77,7 @@ export function ProfileManager({ userId, publishedStories }: ProfileManagerProps
                 key={profile.id}
                 profile={profile}
                 userId={userId}
-                publishedStories={publishedStories}
+                stories={stories}
                 isEditing={editingProfileId === profile.id}
                 onEdit={() => setEditingProfileId(profile.id)}
                 onCancelEdit={() => setEditingProfileId(null)}
@@ -92,7 +92,7 @@ export function ProfileManager({ userId, publishedStories }: ProfileManagerProps
         {!hasProfiles && !isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            disabled={publishedStories.length === 0}
+            disabled={stories.length === 0}
             className="w-full py-8 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-blue-300 hover:text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Your First Profile
@@ -105,7 +105,7 @@ export function ProfileManager({ userId, publishedStories }: ProfileManagerProps
 
 interface CreateProfileFormProps {
   userId: string
-  publishedStories: WorkStory[]
+  stories: WorkStory[]
   onCancel: () => void
   onSuccess: () => void
   showAlert: (message: string, title?: string) => void
@@ -113,7 +113,7 @@ interface CreateProfileFormProps {
 
 function CreateProfileForm({
   userId,
-  publishedStories,
+  stories,
   onCancel,
   onSuccess,
   showAlert,
@@ -121,7 +121,7 @@ function CreateProfileForm({
   const createProfile = useCreateProfile()
   const [name, setName] = useState('')
   const [selectedStoryIds, setSelectedStoryIds] = useState<string[]>(
-    publishedStories.map((s) => s.id)
+    stories.map((s) => s.id)
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,7 +179,7 @@ function CreateProfileForm({
           Stories to Include
         </label>
         <div className="space-y-2 max-h-48 overflow-y-auto">
-          {publishedStories.map((story) => (
+          {stories.map((story) => (
             <label
               key={story.id}
               className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"
@@ -219,7 +219,7 @@ function CreateProfileForm({
 interface ProfileCardProps {
   profile: ProfileWithStories
   userId: string
-  publishedStories: WorkStory[]
+  stories: WorkStory[]
   isEditing: boolean
   onEdit: () => void
   onCancelEdit: () => void
@@ -236,7 +236,7 @@ interface ProfileCardProps {
 function ProfileCard({
   profile,
   userId,
-  publishedStories,
+  stories,
   isEditing,
   onEdit,
   onCancelEdit,
@@ -400,7 +400,7 @@ function ProfileCard({
             Edit Stories
           </label>
           <div className="space-y-2 max-h-48 overflow-y-auto mb-3">
-            {publishedStories.map((story) => (
+            {stories.map((story) => (
               <label
                 key={story.id}
                 className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 cursor-pointer"

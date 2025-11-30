@@ -9,8 +9,6 @@ export {
   useCreateStory,
   useUpdateStory,
   useDeleteStory,
-  usePublishStory,
-  useUnpublishStory,
 } from './hooks/useStoryMutations'
 
 export { templates, templateList, getTemplate, type TemplateType } from './templates'

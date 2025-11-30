@@ -14,8 +14,6 @@ export function StoryCard({ story, onDelete }: StoryCardProps) {
   const filledPrompts = Object.values(responses).filter((v) => v && v.trim()).length
   const totalPrompts = template.prompts.length
 
-  const isDraft = story.status === 'draft'
-
   return (
     <div className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-4">
@@ -24,15 +22,6 @@ export function StoryCard({ story, onDelete }: StoryCardProps) {
             <span className="text-xs text-gray-500 uppercase tracking-wide">
               {template.name}
             </span>
-            {isDraft ? (
-              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                Draft
-              </span>
-            ) : (
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Published
-              </span>
-            )}
           </div>
           <h3 className="font-semibold text-lg truncate">{story.title}</h3>
           <p className="text-sm text-gray-500 mt-1">
