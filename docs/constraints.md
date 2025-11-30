@@ -16,7 +16,7 @@
 - **Backend**: Supabase (Auth, Database, Storage)
 - **Database**: PostgreSQL (via Supabase)
 - **File Storage**: Supabase Storage (for videos and images)
-- **Hosting**: TBD (Vercel, Netlify, or similar)
+- **Hosting**: Vercel
 
 ### Performance
 

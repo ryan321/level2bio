@@ -27,7 +27,7 @@ All specs live in `/docs`. Consult before making changes:
 - **Database**: PostgreSQL (via Supabase)
 - **File Storage**: Supabase Storage (videos, images)
 - **Auth**: Email/password + LinkedIn OAuth (both available), GitHub OAuth (optional, for repo verification)
-- **Hosting**: TBD (Vercel or similar)
+- **Hosting**: Vercel (level2.bio)
 
 ## Conventions
 
@@ -58,9 +58,9 @@ All specs live in `/docs`. Consult before making changes:
 
 - [x] Discovery (vision, spec, constraints)
 - [x] Architecture
-- [x] Implementation (in progress)
+- [x] Implementation
 - [ ] Verification
-- [ ] Ship
+- [x] Ship (deployed to level2.bio)
 
 ### Implementation Progress
 
