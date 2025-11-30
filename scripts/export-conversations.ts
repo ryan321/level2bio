@@ -374,6 +374,59 @@ function conversationToMarkdown(conv: Conversation): string {
   return lines.join('\n')
 }
 
+function conversationToChatMarkdown(conv: Conversation): string {
+  const lines: string[] = []
+
+  // Header
+  lines.push(`# Chat: ${conv.slug}`)
+  lines.push('')
+  lines.push(`**Started:** ${conv.startTime.toISOString()}`)
+  lines.push(`**Ended:** ${conv.endTime.toISOString()}`)
+  lines.push(`**Duration:** ${Math.round((conv.endTime.getTime() - conv.startTime.getTime()) / 1000 / 60)} minutes`)
+  lines.push('')
+  lines.push('---')
+  lines.push('')
+
+  for (const entry of conv.entries) {
+    const timestamp = new Date(entry.timestamp)
+    const timeStr = timestamp.toLocaleTimeString()
+    const content = entry.message?.content
+
+    // Handle user messages
+    if (isUserTextMessage(entry)) {
+      const rawContent = typeof content === 'string' ? content :
+        (Array.isArray(content) ? content.map(b => b.text || '').join('') : '')
+
+      // Skip context continuation summaries
+      if (rawContent.includes('This session is being continued from a previous conversation')) {
+        continue
+      }
+
+      const userText = formatUserContent(content)
+      if (userText.trim()) {
+        lines.push(`**👤 User** *${timeStr}*`)
+        lines.push('')
+        lines.push(userText)
+        lines.push('')
+      }
+      continue
+    }
+
+    // Handle assistant messages - only text, no tools
+    if (entry.type === 'assistant' && content) {
+      const assistantText = formatAssistantText(content)
+      if (assistantText.trim()) {
+        lines.push(`**🤖 Assistant** *${timeStr}*`)
+        lines.push('')
+        lines.push(assistantText)
+        lines.push('')
+      }
+    }
+  }
+
+  return lines.join('\n')
+}
+
 function main() {
   const args = process.argv.slice(2)
   const singleFile = args.includes('--single')
@@ -404,61 +457,122 @@ function main() {
   // Create output directory
   fs.mkdirSync(outputDir, { recursive: true })
 
+  // Create detailed output directory
+  const detailedDir = path.join(outputDir, 'detailed')
+  const chatDir = path.join(outputDir, 'chat')
+  fs.mkdirSync(detailedDir, { recursive: true })
+  fs.mkdirSync(chatDir, { recursive: true })
+
   if (singleFile) {
-    // Output as single file
-    const allMarkdown: string[] = []
-    allMarkdown.push('# Claude Code Conversations')
-    allMarkdown.push('')
-    allMarkdown.push(`Generated: ${new Date().toISOString()}`)
-    allMarkdown.push('')
-    allMarkdown.push('## Table of Contents')
-    allMarkdown.push('')
+    // Output as single files
+    const allDetailed: string[] = []
+    allDetailed.push('# Claude Code Conversations (Detailed)')
+    allDetailed.push('')
+    allDetailed.push(`Generated: ${new Date().toISOString()}`)
+    allDetailed.push('')
+    allDetailed.push('This version includes all tool calls and outputs.')
+    allDetailed.push('')
+    allDetailed.push('## Table of Contents')
+    allDetailed.push('')
+
+    const allChat: string[] = []
+    allChat.push('# Claude Code Conversations (Chat)')
+    allChat.push('')
+    allChat.push(`Generated: ${new Date().toISOString()}`)
+    allChat.push('')
+    allChat.push('This version shows only user prompts and assistant responses.')
+    allChat.push('')
+    allChat.push('## Table of Contents')
+    allChat.push('')
 
     for (let i = 0; i < conversations.length; i++) {
       const conv = conversations[i]
-      allMarkdown.push(`${i + 1}. [${conv.slug}](#conversation-${conv.agentId})`)
+      allDetailed.push(`${i + 1}. [${conv.slug}](#conversation-${conv.agentId})`)
+      allChat.push(`${i + 1}. [${conv.slug}](#chat-${conv.agentId})`)
     }
 
-    allMarkdown.push('')
-    allMarkdown.push('---')
-    allMarkdown.push('')
+    allDetailed.push('')
+    allDetailed.push('---')
+    allDetailed.push('')
+
+    allChat.push('')
+    allChat.push('---')
+    allChat.push('')
 
     for (const conv of conversations) {
-      allMarkdown.push(conversationToMarkdown(conv))
-      allMarkdown.push('')
-      allMarkdown.push('---')
-      allMarkdown.push('')
+      allDetailed.push(conversationToMarkdown(conv))
+      allDetailed.push('')
+      allDetailed.push('---')
+      allDetailed.push('')
+
+      allChat.push(conversationToChatMarkdown(conv))
+      allChat.push('')
+      allChat.push('---')
+      allChat.push('')
     }
 
-    const outputPath = path.join(outputDir, 'all-conversations.md')
-    fs.writeFileSync(outputPath, allMarkdown.join('\n'))
-    console.log(`Written: ${outputPath}`)
+    fs.writeFileSync(path.join(outputDir, 'all-detailed.md'), allDetailed.join('\n'))
+    fs.writeFileSync(path.join(outputDir, 'all-chat.md'), allChat.join('\n'))
+    console.log(`Written: ${outputDir}/all-detailed.md`)
+    console.log(`Written: ${outputDir}/all-chat.md`)
   } else {
     // Output as separate files
-    const index: string[] = []
-    index.push('# Claude Code Conversations')
-    index.push('')
-    index.push(`Generated: ${new Date().toISOString()}`)
-    index.push('')
-    index.push('| # | Conversation | Started | Duration | Messages |')
-    index.push('|---|--------------|---------|----------|----------|')
+    const detailedIndex: string[] = []
+    detailedIndex.push('# Claude Code Conversations (Detailed)')
+    detailedIndex.push('')
+    detailedIndex.push(`Generated: ${new Date().toISOString()}`)
+    detailedIndex.push('')
+    detailedIndex.push('This version includes all tool calls and outputs.')
+    detailedIndex.push('')
+    detailedIndex.push('| # | Conversation | Started | Duration | Messages |')
+    detailedIndex.push('|---|--------------|---------|----------|----------|')
+
+    const chatIndex: string[] = []
+    chatIndex.push('# Claude Code Conversations (Chat)')
+    chatIndex.push('')
+    chatIndex.push(`Generated: ${new Date().toISOString()}`)
+    chatIndex.push('')
+    chatIndex.push('This version shows only user prompts and assistant responses.')
+    chatIndex.push('')
+    chatIndex.push('| # | Conversation | Started | Duration |')
+    chatIndex.push('|---|--------------|---------|----------|')
 
     for (let i = 0; i < conversations.length; i++) {
       const conv = conversations[i]
       const filename = `${String(i + 1).padStart(3, '0')}-${conv.agentId}.md`
       const duration = Math.round((conv.endTime.getTime() - conv.startTime.getTime()) / 1000 / 60)
 
-      index.push(`| ${i + 1} | [${conv.slug}](./${filename}) | ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()} | ${duration} min | ${conv.entries.length} |`)
+      detailedIndex.push(`| ${i + 1} | [${conv.slug}](./${filename}) | ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()} | ${duration} min | ${conv.entries.length} |`)
+      chatIndex.push(`| ${i + 1} | [${conv.slug}](./${filename}) | ${conv.startTime.toLocaleDateString()} ${conv.startTime.toLocaleTimeString()} | ${duration} min |`)
 
-      const markdown = conversationToMarkdown(conv)
-      const outputPath = path.join(outputDir, filename)
-      fs.writeFileSync(outputPath, markdown)
+      // Write detailed version
+      const detailedMarkdown = conversationToMarkdown(conv)
+      fs.writeFileSync(path.join(detailedDir, filename), detailedMarkdown)
+
+      // Write chat version
+      const chatMarkdown = conversationToChatMarkdown(conv)
+      fs.writeFileSync(path.join(chatDir, filename), chatMarkdown)
     }
 
-    const indexPath = path.join(outputDir, 'README.md')
-    fs.writeFileSync(indexPath, index.join('\n'))
-    console.log(`Written ${conversations.length} files to ${outputDir}`)
-    console.log(`Index: ${indexPath}`)
+    fs.writeFileSync(path.join(detailedDir, 'README.md'), detailedIndex.join('\n'))
+    fs.writeFileSync(path.join(chatDir, 'README.md'), chatIndex.join('\n'))
+
+    // Write main index
+    const mainIndex: string[] = []
+    mainIndex.push('# Claude Code Conversations')
+    mainIndex.push('')
+    mainIndex.push(`Generated: ${new Date().toISOString()}`)
+    mainIndex.push('')
+    mainIndex.push('## Versions')
+    mainIndex.push('')
+    mainIndex.push('- **[Detailed](./detailed/)** - Full conversations with all tool calls and outputs')
+    mainIndex.push('- **[Chat](./chat/)** - Just user prompts and assistant responses')
+    mainIndex.push('')
+    fs.writeFileSync(path.join(outputDir, 'README.md'), mainIndex.join('\n'))
+
+    console.log(`Written ${conversations.length} detailed files to ${detailedDir}`)
+    console.log(`Written ${conversations.length} chat files to ${chatDir}`)
+    console.log(`Index: ${outputDir}/README.md`)
   }
 }
 
