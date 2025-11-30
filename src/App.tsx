@@ -7,6 +7,7 @@ import { ROUTES } from '@/lib/constants'
 // Lazy load pages for code splitting
 const Home = lazy(() => import('@/pages/Home'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const StoryEditorPage = lazy(() => import('@/pages/StoryEditorPage'))
 const PublicProfilePage = lazy(() => import('@/pages/PublicProfilePage'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
@@ -41,6 +42,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.STORY_NEW}
+                element={
+                  <ProtectedRoute>
+                    <StoryEditorPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path={ROUTES.STORY_EDITOR}
+                element={
+                  <ProtectedRoute>
+                    <StoryEditorPage />
                   </ProtectedRoute>
                 }
               />

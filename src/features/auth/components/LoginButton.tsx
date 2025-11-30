@@ -5,31 +5,36 @@ interface LoginButtonProps {
 }
 
 export function LoginButton({ className = '' }: LoginButtonProps) {
-  const { signIn, isLoading } = useAuth()
+  const { signInWithLinkedIn, isLoading, error } = useAuth()
 
   const handleClick = async () => {
-    await signIn()
+    try {
+      await signInWithLinkedIn()
+    } catch {
+      // Error is already set in context
+    }
   }
 
-  const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
-
   return (
-    <button
-      onClick={handleClick}
-      disabled={isLoading}
-      className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
-    >
-      {isLoading ? (
-        'Loading...'
-      ) : useMockAuth ? (
-        'Sign in (Dev Mode)'
-      ) : (
-        <>
-          <LinkedInIcon />
-          Sign in with LinkedIn
-        </>
+    <div className="flex flex-col items-center gap-2">
+      <button
+        onClick={handleClick}
+        disabled={isLoading}
+        className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      >
+        {isLoading ? (
+          'Connecting...'
+        ) : (
+          <>
+            <LinkedInIcon />
+            Sign in with LinkedIn
+          </>
+        )}
+      </button>
+      {error && (
+        <p className="text-red-600 text-sm">{error}</p>
       )}
-    </button>
+    </div>
   )
 }
 
