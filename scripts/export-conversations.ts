@@ -292,7 +292,7 @@ function conversationToMarkdown(conv: Conversation): string {
       if (userText.trim()) {
         lines.push(`---`)
         lines.push('')
-        lines.push(`## 💬 USER`)
+        lines.push(`## 👤 USER`)
         lines.push(`*${timeStr}*`)
         lines.push('')
         lines.push(`> **${userText.split('\n')[0]}**`)  // First line bold
