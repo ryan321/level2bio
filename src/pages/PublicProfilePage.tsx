@@ -82,15 +82,16 @@ export default function PublicProfilePage() {
 
       {/* Footer */}
       <footer className="border-t bg-white py-6">
-        <div className="max-w-3xl mx-auto px-6 text-center text-sm text-gray-500">
-          Powered by{' '}
+        <div className="max-w-3xl mx-auto px-6 flex items-center justify-center gap-2 text-sm text-gray-500">
+          <span>Powered by</span>
           <a
             href="/"
-            className="text-blue-600 hover:underline"
+            className="flex items-center gap-1 text-gray-700 hover:text-gray-900"
             target="_blank"
             rel="noopener noreferrer"
           >
-            Level2.bio
+            <img src="/logo.png" alt="Level2" className="w-5 h-5" />
+            <span className="font-medium">Level2</span>
           </a>
         </div>
       </footer>

@@ -17,7 +17,10 @@ export default memo(function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-6 py-8">
         <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Level2" className="w-8 h-8" />
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-gray-600">{displayName}</span>
             <button

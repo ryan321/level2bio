@@ -12,8 +12,16 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* Header */}
+      <header className="px-6 py-4">
+        <div className="max-w-4xl mx-auto flex items-center gap-2">
+          <img src="/logo.png" alt="Level2" className="w-8 h-8" />
+          <span className="font-semibold text-lg">Level2</span>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center px-6 py-24 md:py-32">
+      <section className="flex flex-col items-center justify-center px-6 py-16 md:py-24">
         <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 max-w-4xl">
           Your resume's second layer
         </h1>
