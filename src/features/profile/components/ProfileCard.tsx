@@ -453,7 +453,7 @@ export const ProfileCard = memo(function ProfileCard({
                         <button
                           onClick={() => moveStory(story.id, 'up')}
                           disabled={index === 0}
-                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
                           aria-label="Move up"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -463,7 +463,7 @@ export const ProfileCard = memo(function ProfileCard({
                         <button
                           onClick={() => moveStory(story.id, 'down')}
                           disabled={index === selectedStoryIds.length - 1}
-                          className="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
                           aria-label="Move down"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,7 +474,7 @@ export const ProfileCard = memo(function ProfileCard({
                       <span className="text-sm flex-1">{story.title}</span>
                       <button
                         onClick={() => toggleStory(story.id)}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-gray-500 hover:text-red-500"
                         aria-label="Remove story"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -501,7 +501,7 @@ export const ProfileCard = memo(function ProfileCard({
                       onClick={() => toggleStory(story.id)}
                       className="flex items-center gap-2 p-2 w-full text-left rounded hover:bg-gray-100"
                     >
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                       </svg>
                       <span className="text-sm text-gray-600">{story.title}</span>

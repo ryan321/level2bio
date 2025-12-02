@@ -225,6 +225,42 @@ begin
 end;
 $$;
 
+-- RPC function for public profile access (prevents enumeration)
+create function get_public_profile(p_share_token text)
+returns table (id uuid, user_id uuid, name text, headline text, bio text, ...)
+language plpgsql
+security definer
+as $$
+begin
+  return query
+  select p.id, p.user_id, p.name, ...
+  from profiles p
+  join users u on u.id = p.user_id
+  where p.share_token = p_share_token
+    and p.is_active = true
+    and (p.expires_at is null or p.expires_at > now());
+end;
+$$;
+
+-- RPC function for public profile stories (prevents enumeration)
+create function get_public_profile_stories(p_share_token text)
+returns table (...)
+language plpgsql
+security definer
+as $$
+begin
+  return query
+  select ws.id, ws.title, ...
+  from work_stories ws
+  join profile_stories ps on ps.work_story_id = ws.id
+  join profiles p on p.id = ps.profile_id
+  where p.share_token = p_share_token
+    and p.is_active = true
+    and (p.expires_at is null or p.expires_at > now())
+  order by ps.display_order;
+end;
+$$;
+
 -- indexes
 create index work_stories_user_id_idx on work_stories(user_id);
 create index work_stories_user_id_display_order_idx on work_stories(user_id, display_order);
@@ -423,14 +459,19 @@ level2bio/
 - **Authentication**: Supabase Auth with email/password + LinkedIn OAuth (`linkedin_oidc` provider)
 - **Authorization**: Row Level Security (RLS) policies in Supabase
   - Users can only read/write their own data
-  - Public profiles readable via share token (no auth)
+  - Public profiles accessible only via SECURITY DEFINER functions that require valid share_token
+  - Prevents profile/user enumeration attacks (no direct SELECT on profiles/users for public)
   - Storage RLS enforces folder-based permissions (users can only access their own files)
 - **Data protection**:
   - OAuth tokens managed by Supabase (not stored in app)
   - Share tokens are 8-char alphanumeric (unguessable, ~83 trillion combinations)
-  - HTTPS only
+  - HTTPS only with HSTS (Strict-Transport-Security: max-age=63072000; includeSubDomains; preload)
   - Content Security Policy (CSP) headers restrict iframe sources to YouTube only
-  - X-Frame-Options, X-Content-Type-Options, Referrer-Policy headers
+  - X-Frame-Options: DENY (prevents clickjacking)
+  - X-Content-Type-Options: nosniff (prevents MIME sniffing)
+  - Cross-Origin-Opener-Policy: same-origin (isolates browsing context)
+  - Referrer-Policy: strict-origin-when-cross-origin
+  - Cache-Control headers for static assets and API routes
   - OAuth redirect URLs validated against VITE_APP_URL (prevents open redirect attacks)
 - **Input validation**:
   - File upload magic number validation (validates actual file content)
@@ -442,21 +483,26 @@ level2bio/
   - Revoked links return neutral message (no info leak)
   - No tracking beyond simple view count
   - Production-safe logging (no console output in production)
+  - robots.txt blocks crawling of private routes (/dashboard, /stories/)
 
 ## Performance Considerations
 
 - **Initial load**: Code-split by route (React lazy loading)
 - **Bundle optimization**: react-markdown and other large dependencies in separate chunks
+- **Resource hints**: Preconnect to Supabase domain for faster API calls
 - **Videos**: Stream from Supabase Storage, don't load until played; YouTube embeds via iframe
 - **Images**: Lazy loading with `loading="lazy"` and `decoding="async"` attributes; `aspectRatio: auto` for CLS prevention
+- **CLS prevention**: Skeleton loaders match final layout dimensions to prevent layout shift during loading
 - **Database queries**:
   - React Query caching prevents redundant fetches
   - Single join queries (e.g., profiles with stories) instead of N+1 patterns
   - Optimized column selection
+  - SECURITY DEFINER functions for public profile access (single query instead of multiple)
 - **React rendering**:
   - Memoized components (React.memo) for Dashboard, ProfileCard, Toast, etc.
   - useMemo for expensive computations (shareUrl, displayName, DialogContainer)
   - useCallback for stable function references
   - fast-deep-equal instead of JSON.stringify for comparisons
   - Constants moved outside components to prevent recreation on render
+- **Accessibility**: Text contrast meets WCAG AA (4.5:1 ratio) - gray-500 minimum for small text
 - **No premature optimization**: Measure first if issues arise

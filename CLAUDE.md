@@ -106,6 +106,11 @@ All specs live in `/docs`. Consult before making changes:
 - **Memoization** (Dashboard, ProfileCard, Toast, useDialog optimized)
 - **Input validation** (headline/bio validation before save)
 - **Image optimization** (decoding="async", aspectRatio for CLS prevention)
+- **Profile enumeration fix** (SECURITY DEFINER functions to prevent token enumeration)
+- **HTTP security headers** (HSTS, COOP, X-Frame-Options, X-Content-Type-Options via Vercel)
+- **SEO improvements** (robots.txt, Supabase preconnect hints)
+- **Accessibility contrast fixes** (text-gray-400 → gray-500 for WCAG AA compliance)
+- **CLS optimization** (skeleton loaders matching final layout dimensions)
 
 **Next up:**
 - E2E testing with Playwright

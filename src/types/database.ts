@@ -229,6 +229,37 @@ export interface Database {
         Args: { p_share_token: string }
         Returns: undefined
       }
+      get_public_profile: {
+        Args: { p_share_token: string }
+        Returns: {
+          id: string
+          user_id: string
+          name: string
+          headline: string | null
+          bio: string | null
+          share_token: string
+          view_count: number
+          created_at: string
+          user_name: string
+          user_headline: string | null
+          user_bio: string | null
+          user_profile_photo_url: string | null
+        }[]
+      }
+      get_public_profile_stories: {
+        Args: { p_share_token: string }
+        Returns: {
+          id: string
+          title: string
+          template_type: string
+          responses: Json
+          video_url: string | null
+          assets: Json
+          display_order: number
+          created_at: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

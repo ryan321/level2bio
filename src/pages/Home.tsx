@@ -93,7 +93,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold mb-2">Private by Default</h3>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-300 text-sm">
                 Nothing is public. Share via unique links you control. Revoke access anytime.
               </p>
             </div>

@@ -42,7 +42,7 @@ export function TemplateSelector({ onSelect }: TemplateSelectorProps) {
               <h3 className="font-semibold text-lg">{template.name}</h3>
             </div>
             <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-gray-500">
               {template.prompts.length} guided prompts
             </div>
           </button>

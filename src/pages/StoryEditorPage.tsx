@@ -50,11 +50,39 @@ export default function StoryEditorPage() {
     }
   }
 
-  // Loading state
+  // Loading state - skeleton that matches final layout to prevent CLS
   if (!isNew && isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading story...</div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="mb-6">
+            <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+          </div>
+          <div className="bg-white rounded-xl shadow-sm p-8">
+            {/* Header skeleton */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2" />
+                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-10 w-20 bg-gray-200 rounded-lg animate-pulse" />
+            </div>
+            {/* Title skeleton */}
+            <div className="mb-8">
+              <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mb-2" />
+              <div className="h-12 w-full bg-gray-200 rounded-lg animate-pulse" />
+            </div>
+            {/* Prompts skeleton */}
+            <div className="space-y-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="h-4 w-40 bg-gray-200 rounded animate-pulse mb-2" />
+                  <div className="h-32 w-full bg-gray-200 rounded-lg animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

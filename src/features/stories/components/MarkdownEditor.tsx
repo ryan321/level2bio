@@ -31,7 +31,7 @@ const PreviewPane = memo(function PreviewPane({ value }: { value: string }) {
           <RichMarkdown>{value}</RichMarkdown>
         </div>
       ) : (
-        <p className="text-gray-400 text-sm italic">Preview will appear here...</p>
+        <p className="text-gray-500 text-sm italic">Preview will appear here...</p>
       )}
     </div>
   )
@@ -238,13 +238,13 @@ export function MarkdownEditor({
             </svg>
             Attach
           </button>
-          <span className="text-xs text-gray-400 hidden sm:inline" aria-hidden="true">
+          <span className="text-xs text-gray-500 hidden sm:inline" aria-hidden="true">
             paste/drop
           </span>
-          <span className="text-xs text-gray-400 hidden sm:inline" title="Use [YouTube](url) to embed videos" aria-hidden="true">
-            <code className="bg-gray-100 px-1 rounded">[YouTube](url)</code> to embed
+          <span className="text-xs text-gray-500 hidden sm:inline" title="Use [YouTube](url) to embed videos" aria-hidden="true">
+            <code className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">[YouTube](url)</code> to embed
           </span>
-          <span className="text-gray-300" aria-hidden="true">|</span>
+          <span className="text-gray-400" aria-hidden="true">|</span>
           <button
             type="button"
             onClick={() => setShowPreview(!showPreview)}
@@ -259,7 +259,7 @@ export function MarkdownEditor({
             Preview
           </button>
         </div>
-        <div className="text-xs text-gray-400" aria-live="polite">
+        <div className="text-xs text-gray-500" aria-live="polite">
           {value.length} chars
         </div>
       </div>

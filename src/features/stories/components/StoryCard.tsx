@@ -40,7 +40,7 @@ export const StoryCard = memo(function StoryCard({ story, onDelete }: StoryCardP
           {onDelete && (
             <button
               onClick={() => onDelete(story.id)}
-              className="text-sm text-gray-400 hover:text-red-600 transition-colors"
+              className="text-sm text-gray-500 hover:text-red-600 transition-colors"
             >
               Delete
             </button>

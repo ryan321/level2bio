@@ -15,24 +15,18 @@ export function usePublicProfile(token: string | undefined) {
     queryFn: async (): Promise<PublicProfile | null> => {
       if (!token) return null
 
-      // First, find the profile and verify it's active and not expired
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('share_token', token)
+      // Fetch profile + user data via SECURITY DEFINER function
+      // This prevents enumeration - only returns data if token is valid
+      const { data: profileData, error: profileError } = await supabase
+        .rpc('get_public_profile', { p_share_token: token })
         .maybeSingle()
 
       if (profileError) {
         throw new Error(`Failed to fetch profile: ${profileError.message}`)
       }
 
-      // Profile doesn't exist or is inactive
-      if (!profile || !profile.is_active) {
-        return null
-      }
-
-      // Check if profile is expired
-      if (profile.expires_at && new Date(profile.expires_at) < new Date()) {
+      // Profile doesn't exist, is inactive, or is expired
+      if (!profileData) {
         return null
       }
 
@@ -45,45 +39,55 @@ export function usePublicProfile(token: string | undefined) {
         }
       })()
 
-      // Fetch user profile
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', profile.user_id)
-        .single()
+      // Fetch stories via SECURITY DEFINER function
+      const { data: storiesData, error: storiesError } = await supabase
+        .rpc('get_public_profile_stories', { p_share_token: token })
 
-      if (userError) {
-        throw new Error(`Failed to fetch user: ${userError.message}`)
+      if (storiesError) {
+        throw new Error(`Failed to fetch stories: ${storiesError.message}`)
       }
 
-      // Fetch stories for this profile via profile_stories join table
-      // Select only needed columns to reduce payload size
-      const { data: profileStories, error: psError } = await supabase
-        .from('profile_stories')
-        .select(`
-          display_order,
-          work_story:work_stories(
-            id,
-            title,
-            template_type,
-            responses,
-            assets,
-            video_url,
-            created_at,
-            updated_at
-          )
-        `)
-        .eq('profile_id', profile.id)
-        .order('display_order', { ascending: true })
-
-      if (psError) {
-        throw new Error(`Failed to fetch stories: ${psError.message}`)
+      // Transform RPC response to match existing types
+      const user: User = {
+        id: profileData.user_id,
+        auth_id: null, // Not exposed publicly
+        linkedin_id: '', // Not exposed publicly
+        email: null, // Not exposed publicly
+        name: profileData.user_name,
+        headline: profileData.user_headline,
+        bio: profileData.user_bio,
+        profile_photo_url: profileData.user_profile_photo_url,
+        created_at: profileData.created_at,
+        updated_at: profileData.created_at, // Not returned by function
       }
 
-      // Extract stories from the join result
-      const stories = (profileStories || [])
-        .map((ps) => ps.work_story as unknown as WorkStory)
-        .filter(Boolean)
+      const profile: Profile = {
+        id: profileData.id,
+        user_id: profileData.user_id,
+        name: profileData.name,
+        headline: profileData.headline,
+        bio: profileData.bio,
+        share_token: profileData.share_token,
+        is_active: true, // Must be true if returned
+        expires_at: null, // Not returned, but must be valid if returned
+        view_count: profileData.view_count,
+        last_viewed_at: null, // Not returned by function
+        created_at: profileData.created_at,
+        updated_at: profileData.created_at, // Not returned by function
+      }
+
+      const stories: WorkStory[] = (storiesData || []).map((s) => ({
+        id: s.id,
+        user_id: profileData.user_id,
+        title: s.title,
+        template_type: s.template_type as WorkStory['template_type'],
+        responses: s.responses,
+        video_url: s.video_url,
+        assets: s.assets,
+        display_order: s.display_order,
+        created_at: s.created_at,
+        updated_at: s.updated_at,
+      }))
 
       return {
         user,

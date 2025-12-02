@@ -1,0 +1,11 @@
+# robots.txt for level2.bio
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /stories/
+
+# Public profiles are allowed
+Allow: /p/
+
+# Sitemap (if you add one later)
+# Sitemap: https://level2.bio/sitemap.xml

@@ -35,7 +35,7 @@ function FormattingHelp({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <h2 id="help-title" className="text-lg font-semibold">Formatting Guide</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-500 hover:text-gray-700"
               aria-label="Close help"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,10 +204,10 @@ export function StoryEditor({ story }: StoryEditorProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <div className="text-sm text-gray-500 mb-1">
+          <div className="text-sm text-gray-600 mb-1">
             {template.name}
           </div>
-          <div className="text-xs text-gray-400">
+          <div className="text-xs text-gray-600">
             {isSaving ? (
               'Saving...'
             ) : saveError ? (
@@ -224,7 +224,7 @@ export function StoryEditor({ story }: StoryEditorProps) {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowHelp(true)}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
             aria-label="Formatting help"
             title="Formatting help"
           >
