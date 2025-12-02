@@ -1,11 +1,13 @@
 # robots.txt for level2.bio
 User-agent: *
-Allow: /
-Disallow: /dashboard
-Disallow: /stories/
 
-# Public profiles are allowed
+# Allow public pages
+Allow: /
 Allow: /p/
+
+# Block private/authenticated routes
+Disallow: /dashboard
+Disallow: /stories
 
 # Sitemap (if you add one later)
 # Sitemap: https://level2.bio/sitemap.xml
