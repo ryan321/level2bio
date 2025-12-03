@@ -464,23 +464,51 @@ level2bio/
   - Storage RLS enforces folder-based permissions (users can only access their own files)
 - **Data protection**:
   - OAuth tokens managed by Supabase (not stored in app)
-  - Share tokens are 8-char alphanumeric (unguessable, ~83 trillion combinations)
+  - Share tokens are 16-char alphanumeric (~85 bits entropy, unguessable)
+  - Share token format validated before database queries (prevents malformed input)
   - HTTPS only with HSTS (Strict-Transport-Security: max-age=63072000; includeSubDomains; preload)
-  - Content Security Policy (CSP) headers restrict iframe sources to YouTube only
+  - Content Security Policy (CSP) headers:
+    - `script-src 'self'` - no external scripts
+    - `img-src` restricted to self, Supabase, and LinkedIn CDN
+    - `frame-src` restricted to YouTube only
+    - `object-src 'none'` - blocks plugins (Flash, Java)
+    - `worker-src 'self'` - Web Worker support
+    - `frame-ancestors 'none'` - prevents clickjacking
   - X-Frame-Options: DENY (prevents clickjacking)
   - X-Content-Type-Options: nosniff (prevents MIME sniffing)
+  - X-DNS-Prefetch-Control: off (prevents DNS leakage)
   - Cross-Origin-Opener-Policy: same-origin (isolates browsing context)
   - Referrer-Policy: strict-origin-when-cross-origin
+  - Permissions-Policy blocks geolocation, camera, microphone, payment, USB, sensors
   - Cache-Control headers for static assets and API routes
-  - OAuth redirect URLs validated against VITE_APP_URL (prevents open redirect attacks)
+  - OAuth redirect URLs require VITE_APP_URL (no window.location.origin fallback)
+- **Authorization** (defense-in-depth):
+  - Row Level Security (RLS) with FORCE ROW LEVEL SECURITY on all tables
+  - WITH CHECK clauses on INSERT/UPDATE policies
+  - Application-level ownership verification before all mutations
+  - Double-check ownership in query WHERE clauses
+  - Story ownership verified when adding to profiles (prevents adding others' stories)
 - **Input validation**:
-  - File upload magic number validation (validates actual file content)
+  - Database-level CHECK constraints on all text fields (name, headline, bio, title)
+  - Database triggers for JSONB validation (responses, assets)
+  - Database triggers for resource limits (500 stories/user, 50 profiles/user, 100 stories/profile)
+  - Mutation hook validation (title, responses, assets, storyIds)
+  - File upload magic number validation (validates actual file content, not just MIME type)
   - URL protocol validation (blocks javascript:, data: in links)
   - YouTube videoId validation (11-char alphanumeric only)
   - Password strength requirements (12+ chars, mixed case, numbers)
   - Headline/bio length and content validation before save
+  - UUID format validation for all IDs
+  - Null byte and zero-width character removal from text inputs
+- **XSS prevention**:
+  - OAuth user names sanitized (removes `<>"'` and control characters)
+  - Markdown special characters escaped in asset names
+  - react-markdown without rehypeRaw (no raw HTML allowed)
+  - Protocol allowlisting for links and images
+  - React auto-escaping for all JSX interpolation
 - **Privacy**:
   - Revoked links return neutral message (no info leak)
+  - Generic error messages prevent account enumeration
   - No tracking beyond simple view count
   - Production-safe logging (no console output in production)
   - robots.txt blocks crawling of private routes (/dashboard, /stories/)

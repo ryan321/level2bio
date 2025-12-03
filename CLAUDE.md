@@ -111,7 +111,16 @@ All specs live in `/docs`. Consult before making changes:
 - **SEO improvements** (robots.txt, Supabase preconnect hints)
 - **Accessibility contrast fixes** (text-gray-400 → gray-500 for WCAG AA compliance)
 - **CLS optimization** (skeleton loaders matching final layout dimensions)
+- **Comprehensive security audit** (SQL injection, XSS, OWASP Top 10 review)
+- **Authorization hardening** (ownership verification on all mutations, defense-in-depth)
+- **Input validation layer** (database constraints, mutation hooks, share token validation)
+- **XSS prevention** (OAuth user name sanitization, markdown escaping)
+- **Open redirect fix** (removed window.location.origin fallback in OAuth)
+- **CSP hardening** (restricted img-src, added object-src/worker-src, expanded Permissions-Policy)
+- **Resource limits** (database triggers for stories/profiles per user)
+- **Share token security** (increased to 16 chars, format validation before DB queries)
 
 **Next up:**
 - E2E testing with Playwright
 - Error monitoring integration (Sentry or similar)
+- Rate limiting on authentication attempts
