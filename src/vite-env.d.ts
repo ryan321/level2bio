@@ -3,7 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string
   readonly VITE_SUPABASE_ANON_KEY: string
-  readonly VITE_USE_MOCK_AUTH: string
+  readonly VITE_APP_URL: string
+  readonly VITE_EMAIL_AUTH_ENABLED?: string
 }
 
 interface ImportMeta {

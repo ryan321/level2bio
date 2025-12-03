@@ -10,11 +10,17 @@ export default function PublicProfilePage() {
 
   // Security: Validate token format before making DB query
   const tokenValidation = validateShareToken(token)
-  if (!tokenValidation.valid) {
+  const isValidToken = tokenValidation.valid
+
+  // Hooks must be called unconditionally - pass undefined if invalid token
+  const { data: publicProfile, isLoading, error } = usePublicProfile(
+    isValidToken ? token : undefined
+  )
+
+  // Early return after hooks for invalid token
+  if (!isValidToken) {
     return <NotAvailable />
   }
-
-  const { data: publicProfile, isLoading, error } = usePublicProfile(token)
 
   if (isLoading) {
     return (
