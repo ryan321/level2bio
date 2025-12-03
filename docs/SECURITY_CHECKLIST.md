@@ -55,7 +55,7 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 | A01.06 | Path traversal prevention | Can users access files outside intended directories? | [ ] |
 | A01.07 | Forced browsing prevention | Can users access admin/restricted pages directly? | [ ] |
 | A01.08 | HTTP method restrictions | Are dangerous methods (PUT, DELETE) properly restricted? | [ ] |
-| A01.09 | CORS misconfiguration | Is Access-Control-Allow-Origin properly restrictive? | [ ] |
+| A01.09 | CORS misconfiguration | Is Access-Control-Allow-Origin properly restrictive? | [x] |
 | A01.10 | JWT validation | Are JWTs properly validated (signature, expiration, issuer)? | [ ] |
 | A01.11 | Role escalation prevention | Can users elevate their own privileges? | [ ] |
 | A01.12 | Metadata manipulation | Can users modify hidden fields, JWTs, or cookies to escalate access? | [ ] |
@@ -1128,7 +1128,7 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 |----|-----------|-------------------|--------|
 | CSP.01 | default-src | 'self' | [ ] |
 | CSP.02 | script-src | 'self' (no unsafe-inline/eval) | [ ] |
-| CSP.03 | style-src | 'self' (or nonces) | [ ] |
+| CSP.03 | style-src | 'self' 'unsafe-inline' (required for Tailwind CSS) | [~] |
 | CSP.04 | img-src | Specific domains | [ ] |
 | CSP.05 | font-src | 'self' or specific CDN | [ ] |
 | CSP.06 | connect-src | Specific API domains | [ ] |
@@ -1211,6 +1211,7 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 |---------|------|--------|---------|
 | 1.0 | 2025-12-02 | Claude | Initial comprehensive checklist |
 | 1.1 | 2025-12-02 | Claude | Added CI/CD security pipeline, Dependabot, marked completed items |
+| 1.2 | 2025-12-03 | Claude | Fixed CORS (Access-Control-Allow-Origin), documented style-src unsafe-inline as accepted |
 
 ---
 
