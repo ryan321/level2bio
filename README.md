@@ -133,7 +133,7 @@ npx ts-node scripts/export-conversations.ts
 | Metric | Value |
 |--------|-------|
 | Total conversations | 42 |
-| Development time | ~12 hours |
+| Development time | ~10 hours |
 | Input tokens | 719,200 |
 | Output tokens | 692,500 |
 | Cache creation tokens | 16,910,000 |
