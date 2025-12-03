@@ -31,6 +31,13 @@ interface ContentBlock {
   tool_use_id?: string
 }
 
+interface UsageStats {
+  input_tokens?: number
+  output_tokens?: number
+  cache_creation_input_tokens?: number
+  cache_read_input_tokens?: number
+}
+
 interface ConversationEntry {
   uuid: string
   parentUuid: string | null
@@ -39,7 +46,7 @@ interface ConversationEntry {
   sessionId: string
   agentId: string
   slug?: string
-  message: Message
+  message: Message & { usage?: UsageStats }
   toolUseResult?: {
     durationMs?: number
     stdout?: string
@@ -56,6 +63,21 @@ interface Conversation {
   entries: ConversationEntry[]
   startTime: Date
   endTime: Date
+  usage: {
+    inputTokens: number
+    outputTokens: number
+    cacheCreationTokens: number
+    cacheReadTokens: number
+  }
+}
+
+interface TotalStats {
+  totalConversations: number
+  totalDurationMinutes: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalCacheCreationTokens: number
+  totalCacheReadTokens: number
 }
 
 function parseConversationFile(filePath: string): Conversation | null {
@@ -92,6 +114,22 @@ function parseConversationFile(filePath: string): Conversation | null {
   const fileBasename = path.basename(filePath, '.jsonl')
   const extractedAgentId = fileBasename.replace('agent-', '')
 
+  // Calculate token usage
+  let inputTokens = 0
+  let outputTokens = 0
+  let cacheCreationTokens = 0
+  let cacheReadTokens = 0
+
+  for (const entry of entries) {
+    const usage = entry.message?.usage
+    if (usage) {
+      inputTokens += usage.input_tokens || 0
+      outputTokens += usage.output_tokens || 0
+      cacheCreationTokens += usage.cache_creation_input_tokens || 0
+      cacheReadTokens += usage.cache_read_input_tokens || 0
+    }
+  }
+
   return {
     agentId: agentId || extractedAgentId,
     slug: slug || agentId || extractedAgentId,
@@ -99,6 +137,12 @@ function parseConversationFile(filePath: string): Conversation | null {
     entries,
     startTime: new Date(Math.min(...timestamps.map(d => d.getTime()))),
     endTime: new Date(Math.max(...timestamps.map(d => d.getTime()))),
+    usage: {
+      inputTokens,
+      outputTokens,
+      cacheCreationTokens,
+      cacheReadTokens,
+    },
   }
 }
 
@@ -430,6 +474,41 @@ function extractUserPrompts(conversations: Conversation[]): string {
   return lines.join('\n')
 }
 
+function calculateTotalStats(conversations: Conversation[]): TotalStats {
+  let totalDurationMinutes = 0
+  let totalInputTokens = 0
+  let totalOutputTokens = 0
+  let totalCacheCreationTokens = 0
+  let totalCacheReadTokens = 0
+
+  for (const conv of conversations) {
+    const duration = (conv.endTime.getTime() - conv.startTime.getTime()) / 1000 / 60
+    totalDurationMinutes += duration
+    totalInputTokens += conv.usage.inputTokens
+    totalOutputTokens += conv.usage.outputTokens
+    totalCacheCreationTokens += conv.usage.cacheCreationTokens
+    totalCacheReadTokens += conv.usage.cacheReadTokens
+  }
+
+  return {
+    totalConversations: conversations.length,
+    totalDurationMinutes: Math.round(totalDurationMinutes),
+    totalInputTokens,
+    totalOutputTokens,
+    totalCacheCreationTokens,
+    totalCacheReadTokens,
+  }
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(2) + 'M'
+  } else if (num >= 1_000) {
+    return (num / 1_000).toFixed(1) + 'K'
+  }
+  return num.toString()
+}
+
 function main() {
   const args = process.argv.slice(2)
   const singleFile = args.includes('--single')
@@ -454,6 +533,23 @@ function main() {
 
   // Sort by start time
   conversations.sort((a, b) => a.startTime.getTime() - b.startTime.getTime())
+
+  // Calculate and display stats
+  const stats = calculateTotalStats(conversations)
+  const hours = Math.floor(stats.totalDurationMinutes / 60)
+  const minutes = stats.totalDurationMinutes % 60
+
+  console.log('')
+  console.log('=== USAGE STATISTICS ===')
+  console.log(`Total Conversations: ${stats.totalConversations}`)
+  console.log(`Total Duration: ${hours}h ${minutes}m`)
+  console.log(`Input Tokens: ${formatNumber(stats.totalInputTokens)}`)
+  console.log(`Output Tokens: ${formatNumber(stats.totalOutputTokens)}`)
+  console.log(`Cache Creation Tokens: ${formatNumber(stats.totalCacheCreationTokens)}`)
+  console.log(`Cache Read Tokens: ${formatNumber(stats.totalCacheReadTokens)}`)
+  console.log(`Total Tokens: ${formatNumber(stats.totalInputTokens + stats.totalOutputTokens + stats.totalCacheCreationTokens + stats.totalCacheReadTokens)}`)
+  console.log('========================')
+  console.log('')
 
   console.log(`Parsed ${conversations.length} valid conversations`)
 

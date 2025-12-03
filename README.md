@@ -128,17 +128,19 @@ This entire project was built using [Claude Code](https://claude.com/claude-code
 npx ts-node scripts/export-conversations.ts
 ```
 
-### Token Usage
+### Development Stats
 
-| Metric | Tokens |
-|--------|--------|
-| Input tokens | 264,150 |
-| Output tokens | 488,474 |
-| Cache creation | 8,451,138 |
-| Cache read | 183,905,199 |
-| **Total** | **~193 million** |
+| Metric | Value |
+|--------|-------|
+| Total conversations | 42 |
+| Total development time | 28h 36m |
+| Input tokens | 719,200 |
+| Output tokens | 692,500 |
+| Cache creation tokens | 16,910,000 |
+| Cache read tokens | 253,450,000 |
+| **Total tokens** | **~272 million** |
 
-Estimated cost: ~$95 (based on Claude Sonnet pricing)
+*Stats generated via `npx ts-node scripts/export-conversations.ts`*
 
 ## License
 
