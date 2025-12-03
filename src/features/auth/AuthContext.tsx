@@ -10,6 +10,7 @@ import {
 } from 'react'
 import { supabase } from '@/lib/supabase'
 import { logger } from '@/lib/logger'
+import { sanitizeUserName } from '@/lib/validation'
 import type { User } from '@/types'
 
 // Auth user from Supabase Auth (OAuth or email)
@@ -54,9 +55,14 @@ function sessionToAuthUser(user: { id: string; email?: string; user_metadata?: R
   const metadata = user.user_metadata || {}
 
   const getName = (): string => {
-    if (isString(metadata.name)) return metadata.name
-    if (isString(metadata.full_name)) return metadata.full_name
-    return user.email?.split('@')[0] || 'User'
+    // Get raw name from OAuth metadata
+    let rawName: string
+    if (isString(metadata.name)) rawName = metadata.name
+    else if (isString(metadata.full_name)) rawName = metadata.full_name
+    else rawName = user.email?.split('@')[0] || 'User'
+
+    // Security: Sanitize name from OAuth providers to prevent XSS
+    return sanitizeUserName(rawName)
   }
 
   const getProfilePhoto = (): string | null => {
@@ -256,8 +262,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Sign in with LinkedIn OAuth
   const signInWithLinkedIn = useCallback(async () => {
     setError(null)
-    // Use hardcoded origin for security - prevents open redirect attacks
-    const allowedOrigin = import.meta.env.VITE_APP_URL || window.location.origin
+    // Security: Use hardcoded origin to prevent open redirect attacks
+    // NEVER fall back to window.location.origin as it can be manipulated
+    const allowedOrigin = import.meta.env.VITE_APP_URL
+    if (!allowedOrigin) {
+      setError('Authentication configuration error')
+      throw new Error('VITE_APP_URL environment variable is required for OAuth')
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'linkedin_oidc',
       options: {

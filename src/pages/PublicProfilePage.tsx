@@ -2,15 +2,19 @@ import { useParams } from 'react-router-dom'
 import { usePublicProfile } from '@/features/profile'
 import { templates, type TemplateType } from '@/features/stories'
 import { RichMarkdown } from '@/components/RichMarkdown'
+import { validateShareToken } from '@/lib/validation'
 import type { WorkStory, StoryAsset } from '@/types'
 
 export default function PublicProfilePage() {
   const { token } = useParams<{ token: string }>()
-  const { data: publicProfile, isLoading, error } = usePublicProfile(token)
 
-  if (!token) {
+  // Security: Validate token format before making DB query
+  const tokenValidation = validateShareToken(token)
+  if (!tokenValidation.valid) {
     return <NotAvailable />
   }
+
+  const { data: publicProfile, isLoading, error } = usePublicProfile(token)
 
   if (isLoading) {
     return (

@@ -2,6 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { PROFILES_QUERY_KEY } from './useProfiles'
 import type { ProfileInsert, ProfileUpdate } from '@/types'
+import {
+  validateProfileName,
+  validateHeadline,
+  validateBio,
+  validateUUIDArray,
+  VALIDATION_LIMITS,
+} from '@/lib/validation'
 
 // URL-safe characters for short tokens (no ambiguous chars like 0/O, 1/l/I)
 const TOKEN_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz'
@@ -76,6 +83,27 @@ export function useCreateProfile() {
       const authUserId = await getAuthUserId()
       if (authUserId !== userId) {
         throw new Error('Unauthorized')
+      }
+
+      // Validation: Validate all inputs
+      const nameValidation = validateProfileName(name)
+      if (!nameValidation.valid) {
+        throw new Error(nameValidation.error)
+      }
+
+      const headlineValidation = validateHeadline(headline)
+      if (!headlineValidation.valid) {
+        throw new Error(headlineValidation.error)
+      }
+
+      const bioValidation = validateBio(bio)
+      if (!bioValidation.valid) {
+        throw new Error(bioValidation.error)
+      }
+
+      const storyIdsValidation = validateUUIDArray(storyIds, VALIDATION_LIMITS.maxStoriesPerProfile)
+      if (!storyIdsValidation.valid) {
+        throw new Error(storyIdsValidation.error)
       }
 
       // Security: Verify all stories belong to this user
@@ -156,6 +184,28 @@ export function useUpdateProfile() {
         throw new Error('Unauthorized')
       }
       await verifyProfileOwnership(profileId, authUserId)
+
+      // Validation: Validate inputs if provided
+      if (name !== undefined) {
+        const nameValidation = validateProfileName(name)
+        if (!nameValidation.valid) {
+          throw new Error(nameValidation.error)
+        }
+      }
+
+      if (headline !== undefined && headline !== null) {
+        const headlineValidation = validateHeadline(headline)
+        if (!headlineValidation.valid) {
+          throw new Error(headlineValidation.error)
+        }
+      }
+
+      if (bio !== undefined && bio !== null) {
+        const bioValidation = validateBio(bio)
+        if (!bioValidation.valid) {
+          throw new Error(bioValidation.error)
+        }
+      }
 
       const updates: ProfileUpdate = {
         updated_at: new Date().toISOString(),
@@ -333,6 +383,12 @@ export function useUpdateProfileStories() {
       const authUserId = await getAuthUserId()
       if (authUserId !== userId) {
         throw new Error('Unauthorized')
+      }
+
+      // Validation: Validate storyIds array
+      const storyIdsValidation = validateUUIDArray(storyIds, VALIDATION_LIMITS.maxStoriesPerProfile)
+      if (!storyIdsValidation.valid) {
+        throw new Error(storyIdsValidation.error)
       }
 
       // Security: Verify profile belongs to this user
