@@ -124,9 +124,25 @@ This entire project was built using [Claude Code](https://claude.com/claude-code
 
 ### Regenerating Conversation Exports
 
+The export script reads Claude Code session files and generates markdown documentation.
+
 ```bash
+# Export conversations (outputs to docs/conversations/)
 npx ts-node scripts/export-conversations.ts
+
+# Export to a custom directory
+npx ts-node scripts/export-conversations.ts --output ./my-output
+
+# Export as a single file instead of separate files
+npx ts-node scripts/export-conversations.ts --single
 ```
+
+**Note:** The script expects Claude Code session files at:
+`~/.claude/projects/-Users-ryan-projects-level2bio/`
+
+Running the script will display usage statistics and generate:
+- `user-prompts.md` — All user messages in one file
+- `detailed/` — Individual conversation files with full tool calls
 
 ### Development Stats
 
