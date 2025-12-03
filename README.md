@@ -133,14 +133,14 @@ npx ts-node scripts/export-conversations.ts
 | Metric | Value |
 |--------|-------|
 | Total conversations | 42 |
-| Total development time | 28h 36m |
+| Development time | ~12 hours |
 | Input tokens | 719,200 |
 | Output tokens | 692,500 |
 | Cache creation tokens | 16,910,000 |
 | Cache read tokens | 253,450,000 |
 | **Total tokens** | **~272 million** |
 
-*Stats generated via `npx ts-node scripts/export-conversations.ts`*
+*Development time is estimated (parallel agent sessions not double-counted). Token stats generated via `npx ts-node scripts/export-conversations.ts`*
 
 ## License
 
