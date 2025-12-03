@@ -22,8 +22,9 @@ export function ShareLinkManager({ userId, hasPublishedStories }: ShareLinkManag
 
   const [copied, setCopied] = useState(false)
 
+  // Security: Use VITE_APP_URL instead of window.location.origin to prevent manipulation
   const shareUrl = shareLink
-    ? `${window.location.origin}/p/${shareLink.token}`
+    ? `${import.meta.env.VITE_APP_URL}/p/${shareLink.token}`
     : null
 
   const handleActivate = async () => {

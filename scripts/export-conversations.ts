@@ -171,7 +171,7 @@ function formatToolResult(entry: ConversationEntry): string {
   return output
 }
 
-function formatContent(content: ContentBlock[] | string): string {
+function _formatContent(content: ContentBlock[] | string): string {
   // Handle string content directly (common for user messages)
   if (typeof content === 'string') {
     return content
@@ -216,7 +216,7 @@ function isUserTextMessage(entry: ConversationEntry): boolean {
   return false
 }
 
-function hasToolContent(entry: ConversationEntry): boolean {
+function _hasToolContent(entry: ConversationEntry): boolean {
   const content = entry.message?.content
   if (!content || typeof content === 'string') return false
 

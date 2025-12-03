@@ -55,8 +55,9 @@ export const ProfileCard = memo(function ProfileCard({
   const [editHeadline, setEditHeadline] = useState(profile.headline || '')
   const [editBio, setEditBio] = useState(profile.bio || '')
 
+  // Security: Use VITE_APP_URL instead of window.location.origin to prevent manipulation
   const shareUrl = useMemo(
-    () => `${window.location.origin}/p/${profile.share_token}`,
+    () => `${import.meta.env.VITE_APP_URL}/p/${profile.share_token}`,
     [profile.share_token]
   )
 
