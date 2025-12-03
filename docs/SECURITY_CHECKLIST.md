@@ -497,8 +497,8 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 
 | ID | Check | Description | Status |
 |----|-------|-------------|--------|
-| DBFN.01 | SECURITY DEFINER usage | SECURITY DEFINER used only when necessary | [ ] |
-| DBFN.02 | Search path setting | SET search_path = public on DEFINER functions | [ ] |
+| DBFN.01 | SECURITY DEFINER usage | SECURITY DEFINER used only when necessary | [x] |
+| DBFN.02 | Search path setting | SET search_path = public on DEFINER functions | [x] |
 | DBFN.03 | Input validation | Function inputs validated | [ ] |
 | DBFN.04 | Dynamic SQL prevention | No dynamic SQL with user input | [ ] |
 | DBFN.05 | Return value safety | Functions don't leak sensitive data | [ ] |
@@ -586,10 +586,10 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 
 | ID | Check | Description | Status |
 |----|-------|-------------|--------|
-| VHEAD.01 | Security headers | Security headers in vercel.json | [ ] |
-| VHEAD.02 | Cache headers | Cache-Control appropriate per route | [ ] |
-| VHEAD.03 | Rewrites safety | Rewrites don't expose internal paths | [ ] |
-| VHEAD.04 | Redirects safety | Redirects don't allow open redirect | [ ] |
+| VHEAD.01 | Security headers | Security headers in vercel.json | [x] |
+| VHEAD.02 | Cache headers | Cache-Control appropriate per route | [x] |
+| VHEAD.03 | Rewrites safety | Rewrites don't expose internal paths | [x] |
+| VHEAD.04 | Redirects safety | Redirects don't allow open redirect | [x] |
 
 ### 9.4 Serverless Functions
 
@@ -956,22 +956,22 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 
 | ID | Check | Description | Status |
 |----|-------|-------------|--------|
-| DEPA.01 | npm audit | npm audit in CI/CD | [ ] |
-| DEPA.02 | Snyk/Dependabot | Automated dependency scanning | [ ] |
+| DEPA.01 | npm audit | npm audit in CI/CD | [x] |
+| DEPA.02 | Snyk/Dependabot | Automated dependency scanning | [x] |
 | DEPA.03 | License scanning | License compatibility checked | [ ] |
-| DEPA.04 | Outdated deps | Outdated dependency alerting | [ ] |
+| DEPA.04 | Outdated deps | Outdated dependency alerting | [x] |
 
 ### 19.4 Recommended SAST Tools
 
 | Tool | Purpose | Status |
 |------|---------|--------|
-| ESLint + eslint-plugin-security | JS/TS security linting | [ ] |
-| TypeScript strict | Type safety | [ ] |
+| ESLint + eslint-plugin-security | JS/TS security linting | [x] |
+| TypeScript strict | Type safety | [x] |
 | Semgrep | Pattern-based scanning | [ ] |
 | CodeQL | Semantic analysis | [ ] |
 | Gitleaks | Secret detection | [ ] |
 | Trivy | Container/dependency scanning | [ ] |
-| npm audit / yarn audit | Dependency vulnerabilities | [ ] |
+| npm audit / yarn audit | Dependency vulnerabilities | [x] |
 | Snyk | Comprehensive scanning | [ ] |
 | SonarQube | Code quality + security | [ ] |
 
@@ -1183,8 +1183,8 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 
 | Test Type | Frequency | Last Performed | Next Due |
 |-----------|-----------|----------------|----------|
-| Dependency audit (npm audit) | Weekly | | |
-| SAST scan | Per commit | | |
+| Dependency audit (npm audit) | Weekly (automated via Dependabot + CI) | 2025-12-02 | Automated |
+| SAST scan | Per commit (ESLint + TypeScript in CI) | 2025-12-02 | Automated |
 | DAST scan | Monthly | | |
 | Penetration test | Annually | | |
 | Security header check | Monthly | | |
@@ -1209,7 +1209,8 @@ This document provides an exhaustive list of security concerns to evaluate. Each
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0 | 2024-12-02 | Claude | Initial comprehensive checklist |
+| 1.0 | 2025-12-02 | Claude | Initial comprehensive checklist |
+| 1.1 | 2025-12-02 | Claude | Added CI/CD security pipeline, Dependabot, marked completed items |
 
 ---
 

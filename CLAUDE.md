@@ -119,8 +119,14 @@ All specs live in `/docs`. Consult before making changes:
 - **CSP hardening** (restricted img-src, added object-src/worker-src, expanded Permissions-Policy)
 - **Resource limits** (database triggers for stories/profiles per user)
 - **Share token security** (increased to 16 chars, format validation before DB queries)
+- **CI/CD security pipeline** (GitHub Actions with npm audit, ESLint, TypeScript checks)
+- **Automated dependency updates** (Dependabot for weekly security patches)
+- **Node.js version management** (.nvmrc and engines field for consistency)
+- **SECURITY DEFINER hardening** (SET search_path = public on all functions)
+- **Share URL security** (VITE_APP_URL replaces window.location.origin)
 
 **Next up:**
 - E2E testing with Playwright
 - Error monitoring integration (Sentry or similar)
 - Rate limiting on authentication attempts
+- Enable PKCE for OAuth (Supabase dashboard)

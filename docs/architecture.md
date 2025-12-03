@@ -512,6 +512,11 @@ level2bio/
   - No tracking beyond simple view count
   - Production-safe logging (no console output in production)
   - robots.txt blocks crawling of private routes (/dashboard, /stories/)
+- **Security tooling**:
+  - GitHub Dependabot for automated dependency security updates (weekly)
+  - GitHub Actions CI/CD pipeline with npm audit, ESLint, TypeScript checks
+  - Node.js version locked via .nvmrc and package.json engines field
+  - All SECURITY DEFINER functions include SET search_path = public
 
 ## Performance Considerations
 
