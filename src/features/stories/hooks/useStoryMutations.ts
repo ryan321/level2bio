@@ -4,6 +4,28 @@ import type { WorkStoryInsert, WorkStoryUpdate } from '@/types'
 import { STORIES_QUERY_KEY } from './useStories'
 import type { TemplateType } from '../templates'
 
+// Helper to get authenticated user ID from session
+async function getAuthUserId(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user?.id) {
+    throw new Error('Not authenticated')
+  }
+  return session.user.id
+}
+
+// Verify the current user owns a story
+async function verifyStoryOwnership(storyId: string, authUserId: string): Promise<void> {
+  const { data: story } = await supabase
+    .from('work_stories')
+    .select('user_id')
+    .eq('id', storyId)
+    .single()
+
+  if (!story || story.user_id !== authUserId) {
+    throw new Error('Unauthorized: You do not own this story')
+  }
+}
+
 interface CreateStoryInput {
   userId: string
   templateType: TemplateType
@@ -20,11 +42,17 @@ export function useCreateStory() {
 
   return useMutation({
     mutationFn: async ({ userId, templateType, title }: CreateStoryInput) => {
+      // Security: Verify auth user matches userId
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+
       // Get max display_order for this user
       const { data: existing } = await supabase
         .from('work_stories')
         .select('display_order')
-        .eq('user_id', userId)
+        .eq('user_id', authUserId)
         .order('display_order', { ascending: false })
         .limit(1)
 
@@ -33,7 +61,7 @@ export function useCreateStory() {
         : 0
 
       const newStory: WorkStoryInsert = {
-        user_id: userId,
+        user_id: authUserId,
         template_type: templateType,
         title,
         responses: {},
@@ -47,7 +75,7 @@ export function useCreateStory() {
         .single()
 
       if (error) {
-        throw new Error(`Failed to create story: ${error.message}`)
+        throw new Error('Failed to create story. Please try again.')
       }
 
       return data
@@ -66,15 +94,20 @@ export function useUpdateStory() {
 
   return useMutation({
     mutationFn: async ({ id, updates }: UpdateStoryInput) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      await verifyStoryOwnership(id, authUserId)
+
       const { data, error } = await supabase
         .from('work_stories')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
+        .eq('user_id', authUserId) // Double-check ownership in query
         .select()
         .single()
 
       if (error) {
-        throw new Error(`Failed to update story: ${error.message}`)
+        throw new Error('Failed to update story. Please try again.')
       }
 
       return data
@@ -91,13 +124,21 @@ export function useDeleteStory() {
 
   return useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+      await verifyStoryOwnership(id, authUserId)
+
       const { error } = await supabase
         .from('work_stories')
         .delete()
         .eq('id', id)
+        .eq('user_id', authUserId) // Double-check ownership in query
 
       if (error) {
-        throw new Error(`Failed to delete story: ${error.message}`)
+        throw new Error('Failed to delete story. Please try again.')
       }
 
       return { id, userId }

@@ -85,15 +85,24 @@ export function MarkdownEditor({
         const asset = await upload(file)
         onAssetUploaded?.(asset)
 
+        // Security: Escape markdown special characters in asset name to prevent injection
+        const escapedName = asset.name
+          .replace(/\\/g, '\\\\')  // Escape backslashes first
+          .replace(/\[/g, '\\[')   // Escape opening brackets
+          .replace(/\]/g, '\\]')   // Escape closing brackets
+          .replace(/\(/g, '\\(')   // Escape opening parens
+          .replace(/\)/g, '\\)')   // Escape closing parens
+          .replace(/!/g, '\\!')    // Escape exclamation marks
+
         // Insert markdown syntax based on file type
         let markdown: string
         if (asset.type === 'image') {
-          markdown = `\n![${asset.name}](${asset.url})\n`
+          markdown = `\n![${escapedName}](${asset.url})\n`
         } else if (asset.type === 'video') {
           // Videos can't be embedded in standard markdown, use a link
-          markdown = `\n[${asset.name} (video)](${asset.url})\n`
+          markdown = `\n[${escapedName} (video)](${asset.url})\n`
         } else {
-          markdown = `\n[${asset.name}](${asset.url})\n`
+          markdown = `\n[${escapedName}](${asset.url})\n`
         }
 
         insertAtCursor(markdown)

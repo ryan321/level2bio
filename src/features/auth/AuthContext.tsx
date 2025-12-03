@@ -78,26 +78,45 @@ function sessionToAuthUser(user: { id: string; email?: string; user_metadata?: R
 function getPublicErrorMessage(error: Error | { message: string }): string {
   const message = error.message.toLowerCase()
 
-  // Prevent email enumeration
-  if (message.includes('already registered') || message.includes('already exists')) {
-    return 'An account with this email may already exist. Try signing in instead.'
-  }
-  if (message.includes('invalid login') || message.includes('invalid credentials')) {
+  // Prevent email enumeration - ALL auth-related errors return the same generic message
+  // This prevents attackers from discovering which emails are registered
+  if (
+    message.includes('already registered') ||
+    message.includes('already exists') ||
+    message.includes('invalid login') ||
+    message.includes('invalid credentials') ||
+    message.includes('user not found') ||
+    message.includes('email not confirmed') ||
+    message.includes('invalid email') ||
+    message.includes('email') // Catch any other email-related errors
+  ) {
     return 'Invalid email or password'
   }
-  if (message.includes('user not found')) {
-    return 'Invalid email or password'
+
+  // Password-related errors (can be specific since they don't reveal if account exists)
+  if (message.includes('password') && !message.includes('invalid')) {
+    if (message.includes('weak') || message.includes('short') || message.includes('strength')) {
+      return 'Password does not meet requirements'
+    }
   }
+
   // Hide database errors
   if (message.includes('database') || message.includes('db') || message.includes('sql')) {
     return 'Something went wrong. Please try again.'
   }
+
   // Hide internal errors
-  if (message.includes('internal') || message.includes('server')) {
+  if (message.includes('internal') || message.includes('server') || message.includes('network')) {
     return 'Something went wrong. Please try again.'
   }
 
-  return error.message
+  // Rate limiting
+  if (message.includes('too many') || message.includes('rate limit')) {
+    return 'Too many attempts. Please try again later.'
+  }
+
+  // Default to generic message to avoid leaking any info
+  return 'Something went wrong. Please try again.'
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {

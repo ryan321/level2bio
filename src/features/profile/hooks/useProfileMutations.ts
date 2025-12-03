@@ -5,13 +5,50 @@ import type { ProfileInsert, ProfileUpdate } from '@/types'
 
 // URL-safe characters for short tokens (no ambiguous chars like 0/O, 1/l/I)
 const TOKEN_CHARS = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz'
-const TOKEN_LENGTH = 8
+const TOKEN_LENGTH = 16 // Increased from 8 to 16 for better security (~85 bits entropy)
 
 // Generate a short, URL-friendly, cryptographically random token
 function generateToken(): string {
   const array = new Uint8Array(TOKEN_LENGTH)
   crypto.getRandomValues(array)
   return Array.from(array, (byte) => TOKEN_CHARS[byte % TOKEN_CHARS.length]).join('')
+}
+
+// Helper to get authenticated user ID from session
+async function getAuthUserId(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.user?.id) {
+    throw new Error('Not authenticated')
+  }
+  return session.user.id
+}
+
+// Verify the current user owns a profile
+async function verifyProfileOwnership(profileId: string, authUserId: string): Promise<void> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('id', profileId)
+    .single()
+
+  if (!profile || profile.user_id !== authUserId) {
+    throw new Error('Unauthorized: You do not own this profile')
+  }
+}
+
+// Verify the current user owns all specified stories
+async function verifyStoriesOwnership(storyIds: string[], authUserId: string): Promise<void> {
+  if (storyIds.length === 0) return
+
+  const { data: stories } = await supabase
+    .from('work_stories')
+    .select('id')
+    .eq('user_id', authUserId)
+    .in('id', storyIds)
+
+  if (!stories || stories.length !== storyIds.length) {
+    throw new Error('Unauthorized: One or more stories do not belong to you')
+  }
 }
 
 export interface CreateProfileInput {
@@ -35,6 +72,15 @@ export function useCreateProfile() {
       storyIds = [],
       expiresAt,
     }: CreateProfileInput) => {
+      // Security: Verify the authenticated user matches the userId
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+
+      // Security: Verify all stories belong to this user
+      await verifyStoriesOwnership(storyIds, authUserId)
+
       const token = generateToken()
 
       // Create the profile
@@ -53,7 +99,7 @@ export function useCreateProfile() {
         .single()
 
       if (profileError) {
-        throw new Error(`Failed to create profile: ${profileError.message}`)
+        throw new Error('Failed to create profile. Please try again.')
       }
 
       // Add stories to the profile if provided
@@ -69,7 +115,7 @@ export function useCreateProfile() {
           .insert(profileStories)
 
         if (psError) {
-          throw new Error(`Failed to add stories to profile: ${psError.message}`)
+          throw new Error('Failed to add stories to profile. Please try again.')
         }
       }
 
@@ -98,11 +144,19 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async ({
       profileId,
+      userId,
       name,
       headline,
       bio,
       expiresAt,
     }: UpdateProfileInput) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+      await verifyProfileOwnership(profileId, authUserId)
+
       const updates: ProfileUpdate = {
         updated_at: new Date().toISOString(),
       }
@@ -116,11 +170,12 @@ export function useUpdateProfile() {
         .from('profiles')
         .update(updates)
         .eq('id', profileId)
+        .eq('user_id', authUserId) // Double-check ownership in query
         .select()
         .single()
 
       if (error) {
-        throw new Error(`Failed to update profile: ${error.message}`)
+        throw new Error('Failed to update profile. Please try again.')
       }
 
       return data
@@ -143,11 +198,19 @@ export function useToggleProfile() {
     mutationFn: async ({
       profileId,
       isActive,
+      userId,
     }: {
       profileId: string
       isActive: boolean
       userId: string
     }) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+      await verifyProfileOwnership(profileId, authUserId)
+
       const { data, error } = await supabase
         .from('profiles')
         .update({
@@ -155,11 +218,12 @@ export function useToggleProfile() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', profileId)
+        .eq('user_id', authUserId)
         .select()
         .single()
 
       if (error) {
-        throw new Error(`Failed to toggle profile: ${error.message}`)
+        throw new Error('Failed to toggle profile. Please try again.')
       }
 
       return data
@@ -178,10 +242,18 @@ export function useRegenerateProfileToken() {
   return useMutation({
     mutationFn: async ({
       profileId,
+      userId,
     }: {
       profileId: string
       userId: string
     }) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+      await verifyProfileOwnership(profileId, authUserId)
+
       const newToken = generateToken()
 
       const { data, error } = await supabase
@@ -192,11 +264,12 @@ export function useRegenerateProfileToken() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', profileId)
+        .eq('user_id', authUserId)
         .select()
         .single()
 
       if (error) {
-        throw new Error(`Failed to regenerate token: ${error.message}`)
+        throw new Error('Failed to regenerate token. Please try again.')
       }
 
       return data
@@ -215,17 +288,26 @@ export function useDeleteProfile() {
   return useMutation({
     mutationFn: async ({
       profileId,
+      userId,
     }: {
       profileId: string
       userId: string
     }) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+      await verifyProfileOwnership(profileId, authUserId)
+
       const { error } = await supabase
         .from('profiles')
         .delete()
         .eq('id', profileId)
+        .eq('user_id', authUserId)
 
       if (error) {
-        throw new Error(`Failed to delete profile: ${error.message}`)
+        throw new Error('Failed to delete profile. Please try again.')
       }
     },
     onSuccess: (_, variables) => {
@@ -246,7 +328,19 @@ export function useUpdateProfileStories() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ profileId, storyIds }: UpdateProfileStoriesInput) => {
+    mutationFn: async ({ profileId, userId, storyIds }: UpdateProfileStoriesInput) => {
+      // Security: Verify auth and ownership
+      const authUserId = await getAuthUserId()
+      if (authUserId !== userId) {
+        throw new Error('Unauthorized')
+      }
+
+      // Security: Verify profile belongs to this user
+      await verifyProfileOwnership(profileId, authUserId)
+
+      // Security: Verify ALL stories belong to this user (CRITICAL)
+      await verifyStoriesOwnership(storyIds, authUserId)
+
       // Delete existing profile_stories
       const { error: deleteError } = await supabase
         .from('profile_stories')
@@ -254,7 +348,7 @@ export function useUpdateProfileStories() {
         .eq('profile_id', profileId)
 
       if (deleteError) {
-        throw new Error(`Failed to update profile stories: ${deleteError.message}`)
+        throw new Error('Failed to update profile stories. Please try again.')
       }
 
       // Insert new profile_stories if any
@@ -270,7 +364,7 @@ export function useUpdateProfileStories() {
           .insert(profileStories)
 
         if (insertError) {
-          throw new Error(`Failed to update profile stories: ${insertError.message}`)
+          throw new Error('Failed to update profile stories. Please try again.')
         }
       }
 
@@ -279,6 +373,7 @@ export function useUpdateProfileStories() {
         .from('profiles')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', profileId)
+        .eq('user_id', authUserId)
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
